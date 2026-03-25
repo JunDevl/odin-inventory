@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/main.ts",
-    "launch": "node --watch src/main.ts"
+    "launch": "node --watch src/main.ts public/index.ts"
   },
   "repository": {
     "type": "git",
