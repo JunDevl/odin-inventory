@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { getStock } from "../controllers/stockController.ts";
+import { getStocks } from "../controllers/stockController.ts";
 
 const indexRouter = Router();
 
-indexRouter.get("/", getStock);
+indexRouter.get("/", getStocks);
 
 export default indexRouter;

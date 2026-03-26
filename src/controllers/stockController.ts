@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
 
-export const getStock: RequestHandler = async (req, res) => {
-  res.render("index");
+export const getStocks: RequestHandler = async (req, res) => {
+  res.render("index", { stocks: true });
 }

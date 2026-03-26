@@ -6,7 +6,10 @@ import express from "express";
 import path from "path";
 
 import indexRouter from "./routes/indexRouter.ts";
-// import addMessageRouter from "./routes/addMessageRouter.js";
+import operationsRouter from "./routes/operationsRouter.ts";
+import storagesRouter from "./routes/storagesRouter.ts";
+import entitiesRouter from "./routes/entitiesRouter.ts";
+import itemsRouter from "./routes/itemsRouter.ts";
 
 const __dirname = path.resolve();
 
@@ -22,5 +25,9 @@ app.set("views", path.join(__dirname, "/src/views"));
 app.set("view engine", "ejs");
 
 app.use("/", indexRouter);
+app.use("/operations", operationsRouter);
+app.use("/storages", storagesRouter);
+app.use("/entities", entitiesRouter);
+app.use("/items", itemsRouter);
 
 app.listen(PORT, (err) => err ? console.log(err) : console.log(`Listening on port ${PORT}\n`));
