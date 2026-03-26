@@ -1,8 +1,8 @@
 @font-face {
   font-family: 'Satoshi Variable';
   src: local('Satoshi Variable Bold'), local('SatoshiVariable-Bold'),
-    url('../fonts/SatoshiVariable-Bold.woff2') format('woff2'),
-    url('../fonts/SatoshiVariable-Bold.woff') format('woff');
+    url('../public/fonts/SatoshiVariable-Bold.woff2') format('woff2'),
+    url('../public/fonts/SatoshiVariable-Bold.woff') format('woff');
   font-weight: bold;
   font-style: normal;
   font-display: swap;
@@ -23,8 +23,8 @@
 
   --semantic-error-color: oklch(55% 0.16 30);
 
-  font-size: 18px;
-  font-family: "Satoshi Variable", sans-serif;
+  font: 18px "Satoshi Variable", sans-serif;
+  letter-spacing: 0.18px;
   line-height: 1.5;
   font-weight: 400;
 
@@ -36,6 +36,24 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --darker: oklch(from var(--primary-color) 93% 0.004 h);
+    --dark-1: oklch(from var(--primary-color) 94% 0.008 h);
+    --dark-2: oklch(from var(--primary-color) 96% 0.012 h);
+    --dark-3: oklch(from var(--primary-color) 98% 0.016 h);
+
+    --lighter: oklch(from var(--primary-color) 24% 0.01 h);
+    --light-1: oklch(from var(--primary-color) 20% 0.03 h);
+    --light-2: oklch(from var(--primary-color) 14% 0.05 h);
+    --light-3: oklch(from var(--primary-color) 8% 0.07 h);
+  }
 }
 
 ul,
@@ -169,19 +187,4 @@ main {
   border-radius: 2rem;
   background-color: var(--dark-2);
   flex: 1;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: var(--darker);
-    background-color: white;
-  }
-
-  a:hover {
-    color: var(--light-1);
-  }
-
-  button {
-    background-color: #f9f9f9;
-  }
 }
