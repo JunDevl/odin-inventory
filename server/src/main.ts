@@ -3,6 +3,7 @@ import { config } from "dotenv";
 config();
 
 import express from "express";
+import cors from "cors";
 import path from "path";
 
 import indexRouter from "./routes/indexRouter.ts";
@@ -17,12 +18,10 @@ const app = express();
 
 const PORT = 3000;
 
-const assetsPath = path.join(__dirname, "public");
-app.use(express.static(assetsPath));
+app.use(cors({
+  origin: "http://localhost:5173"
+}))
 app.use(express.urlencoded({ extended: true }));
-
-app.set("views", path.join(__dirname, "/src/views"));
-app.set("view engine", "ejs");
 
 app.use("/", indexRouter);
 app.use("/operations", operationsRouter);
