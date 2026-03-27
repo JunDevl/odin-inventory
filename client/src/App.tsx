@@ -1,10 +1,22 @@
-import './App.css'
+import Sidebar from './components/Sidebar/Sidebar';
+import MainContent from './components/MainContent/MainContent';
+import Table from './components/Table/Table';
+
+import './App.css';
+import { useState } from 'react';
 
 function App() {
+  const [selectedTab, setSelectedTab] = useState("stocks");
 
   return (
     <>
-      <div></div>
+      <Sidebar selectedTab={selectedTab} />
+
+      <MainContent>
+        <Table>
+
+        </Table>
+      </MainContent>
     </>
   )
 }

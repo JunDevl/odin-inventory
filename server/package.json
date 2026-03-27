@@ -5,7 +5,6 @@
   "main": "src/main.ts",
   "scripts": {
     "start": "node src/main.ts",
-    "launch": "node --watch src/main.ts public/index.ts",
     "dev": "nodemon src/main.ts"
   },
   "repository": {
