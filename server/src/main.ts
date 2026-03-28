@@ -2,11 +2,11 @@ import { config } from "dotenv";
 
 config();
 
-import express from "express";
+import express, { Router } from "express";
 import cors from "cors";
 import path from "path";
 
-import indexRouter from "./routes/indexRouter.ts";
+import stocksRouter from "./routes/stocksRouter.ts";
 import operationsRouter from "./routes/operationsRouter.ts";
 import storagesRouter from "./routes/storagesRouter.ts";
 import entitiesRouter from "./routes/entitiesRouter.ts";
@@ -15,6 +15,7 @@ import itemsRouter from "./routes/itemsRouter.ts";
 const __dirname = path.resolve();
 
 const app = express();
+const apiRouter = Router();
 
 const PORT = 3000;
 
@@ -23,10 +24,12 @@ app.use(cors({
 }))
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/", indexRouter);
-app.use("/operations", operationsRouter);
-app.use("/storages", storagesRouter);
-app.use("/entities", entitiesRouter);
-app.use("/items", itemsRouter);
+app.use("/api", apiRouter);
+
+apiRouter.use("/stocks", stocksRouter);
+apiRouter.use("/operations", operationsRouter);
+apiRouter.use("/storages", storagesRouter);
+apiRouter.use("/entities", entitiesRouter);
+apiRouter.use("/items", itemsRouter);
 
 app.listen(PORT, (err) => err ? console.log(err) : console.log(`Listening on port ${PORT}\n`));

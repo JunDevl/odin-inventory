@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getEntities } from "../controllers/entitiesController.ts";
+import { getAllEntities, getEntity } from "../controllers/entitiesController.ts";
 
 const entitiesRouter = Router();
 
-entitiesRouter.get("/", getEntities);
+entitiesRouter.get("/", getAllEntities);
+entitiesRouter.get("/:entityID", getEntity);
 
 export default entitiesRouter;

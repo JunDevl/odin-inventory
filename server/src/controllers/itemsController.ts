@@ -1,9 +1,17 @@
 import type { RequestHandler } from "express";
 
-export const getCategories: RequestHandler = async (req, res) => {
+export const getAllItemCategories: RequestHandler = async (req, res) => {
   res.json({ itemCategories: true });
 }
 
-export const getAvaliableItems: RequestHandler = async (req, res) => {
+export const getItemCategory: RequestHandler = async (req, res) => {
+  res.json({ itemCategories: true });
+}
+
+export const getAllAvaliableItems: RequestHandler = async (req, res) => {
+  res.json({ avaliableItems: true });
+}
+
+export const getAvaliableItem: RequestHandler = async (req, res) => {
   res.json({ avaliableItems: true });
 }

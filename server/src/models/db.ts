@@ -15,5 +15,7 @@ const sql = postgres(`
     process.env["DATABASE_PORT"] ? `:${process.env["DATABASE_PORT"]}` : ""
   }/${
     process.env["DATABASE_NAME"]
-  }`, {ssl: true});
+  }`,
+  {ssl: true}
+);
 

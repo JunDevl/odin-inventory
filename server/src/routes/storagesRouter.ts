@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getStorages } from "../controllers/storagesController.ts";
+import { getAllStorages, getStorage } from "../controllers/storagesController.ts";
 
 const storagesRouter = Router();
 
-storagesRouter.get("/", getStorages);
+storagesRouter.get("/", getAllStorages);
+storagesRouter.get("/:storageID", getStorage);
 
 export default storagesRouter;

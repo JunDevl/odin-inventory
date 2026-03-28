@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getCategories, getAvaliableItems } from "../controllers/itemsController.ts";
+import { getAllItemCategories, getAllAvaliableItems, getAvaliableItem, getItemCategory } from "../controllers/itemsController.ts";
 import path from "path";
 import express from "express";
 
@@ -11,7 +11,10 @@ const itemsRouter = Router();
 
 itemsRouter.use(express.static(assetsPath));
 
-itemsRouter.get("/avaliable", getAvaliableItems);
-itemsRouter.get("/categories", getCategories);
+itemsRouter.get("/avaliable", getAllAvaliableItems);
+itemsRouter.get("/avaliable/itemID", getAvaliableItem);
+
+itemsRouter.get("/categories", getAllItemCategories);
+itemsRouter.get("/categories/categoryID", getItemCategory);
 
 export default itemsRouter;

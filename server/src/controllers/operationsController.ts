@@ -1,5 +1,9 @@
 import type { RequestHandler } from "express";
 
-export const getOperations: RequestHandler = async (req, res) => {
+export const getAllOperations: RequestHandler = async (req, res) => {
+  res.json({ operations: true });
+}
+
+export const getOperation: RequestHandler = async (req, res) => {
   res.json({ operations: true });
 }

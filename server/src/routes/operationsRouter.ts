@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getOperations } from "../controllers/operationsController.ts";
+import { getAllOperations, getOperation } from "../controllers/operationsController.ts";
 
 const operationsRouter = Router();
 
-operationsRouter.get("/", getOperations);
+operationsRouter.get("/", getAllOperations);
+operationsRouter.get("/:operationID", getOperation);
 
 export default operationsRouter;

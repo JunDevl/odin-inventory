@@ -1,11 +1,11 @@
 @font-face {
-  font-family: 'Satoshi Variable';
-  src: local('Satoshi Variable Bold'), local('SatoshiVariable-Bold'),
-    url('../public/fonts/SatoshiVariable-Bold.woff2') format('woff2'),
-    url('../public/fonts/SatoshiVariable-Bold.woff') format('woff');
-  font-weight: bold;
-  font-style: normal;
+  font-family: 'Satoshi-Variable';
+  src: url('fonts/Satoshi-Variable.woff2') format('woff2'),
+    url('fonts/Satoshi-Variable.woff') format('woff'),
+    url('fonts/Satoshi-Variable.ttf') format('truetype');
+  font-weight: 300 900;
   font-display: swap;
+  font-style: normal;
 }
 
 :root {
@@ -23,10 +23,10 @@
 
   --semantic-error-color: oklch(55% 0.16 30);
 
-  font: 18px "Satoshi Variable", sans-serif;
+  font: 18px "Satoshi-Variable", sans-serif;
   letter-spacing: 0.18px;
-  line-height: 1.5;
   font-weight: 400;
+  line-height: 1.5;
 
   color-scheme: light dark;
   color: var(--lighter);
@@ -72,7 +72,7 @@ li {
   list-style: none;
 }
 
-body {
+#root {
   box-sizing: border-box;
   padding: 2rem;
   min-height: 100dvh;
@@ -80,57 +80,4 @@ body {
   align-items: stretch;
   justify-content: stretch;
   gap: 3rem;
-}
-
-.drop-down {
-  padding: 0;
-
-  &:has(li[selected]) {
-    background-color: oklch(from var(--color) 50% 0.5 h);
-  }
-
-  &:hover {
-    background-color: var(--color);
-    border-radius: var(--li-border-radius) 0 0 var(--li-border-radius);
-
-    &:has(ul.hidden) {
-      border-radius: var(--li-border-radius);
-    }
-  }
-
-  &>.title {
-    padding: var(--li-padding);
-    anchor-name: --drop-down-title;
-  }
-
-  &>:not(.title) {
-    border-radius: 0 var(--li-border-radius) var(--li-border-radius) 0;
-    background-color: var(--color);
-    position: absolute;
-    position-anchor: --drop-down-title;
-    position-area: right span-bottom;
-    outline: 0.5rem solid var(--color);
-    box-sizing: content-box;
-    box-shadow: 10px 20px 30px -5px var(--darker);
-    z-index: -1;
-
-    &.hidden {
-      position-area: none;
-      left: anchor(left);
-      top: anchor(top);
-      display: none;
-    }
-
-    &>li {
-      padding: 1rem 2rem;
-
-      &:first-child {
-        border-radius: 0 var(--li-border-radius) var(--li-border-radius) 0;
-      }
-
-      &:not(:first-child) {
-        border-radius: var(--li-border-radius);
-      }
-    }
-  }
 }
