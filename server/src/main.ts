@@ -11,11 +11,11 @@ import operationsRouter from "./routes/operationsRouter.ts";
 import storagesRouter from "./routes/storagesRouter.ts";
 import entitiesRouter from "./routes/entitiesRouter.ts";
 import itemsRouter from "./routes/itemsRouter.ts";
+import usersRouter from "./routes/usersRouter.ts";
 
 const __dirname = path.resolve();
 
 const app = express();
-const apiRouter = Router();
 
 const PORT = 3000;
 
@@ -24,7 +24,10 @@ app.use(cors({
 }))
 app.use(express.urlencoded({ extended: true }));
 
+const apiRouter = Router();
 app.use("/api", apiRouter);
+
+apiRouter.use("/users", usersRouter);
 
 apiRouter.use("/stocks", stocksRouter);
 apiRouter.use("/operations", operationsRouter);

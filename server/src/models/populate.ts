@@ -1,27 +1,33 @@
-import { config, populate } from "dotenv";
+import { config } from "dotenv";
 
-config();
+config(
+  {path:"../../.env"}
+);
 
 import postgres from "postgres";
 import { readFileSync } from "node:fs";
 
 (async () => {
-  const sqlSchema = readFileSync("./schema.sql", {encoding: "utf-8"});
+  try {
+    const sqlSchema = readFileSync("./schema.sql", {encoding: "utf-8"});
 
-  if (!sqlSchema) throw new Error ("Schema SQL files not found.");
+    if (!sqlSchema) throw new Error ("Schema SQL files not found.");
 
-  const sql = postgres(`
-    postgresql://${
-      process.env["ROLE_NAME"]
-    }:${
-      process.env["DB_PASSWORD"]
-    }@${
-      process.env["HOST_NAME"]
-    }${
-      process.env["DATABASE_PORT"] ? `:${process.env["DATABASE_PORT"]}` : ""
-    }/${
-      process.env["DATABASE_NAME"]
-    }`, {ssl: true});
+    const sql = postgres(`
+      postgresql://${
+        process.env["PGUSER"]
+      }:${
+        process.env["PGPASSWORD"]
+      }@${
+        process.env["PGHOST"]
+      }/${
+        process.env["PGDATABASE"]
+      }`,
+      {ssl: true}
+    );
 
-  await sql`${sqlSchema}`.simple()
+    const createdSchema = await sql.unsafe(sqlSchema);
+  } catch (e) {
+    console.log(e)
+  }
 })()
