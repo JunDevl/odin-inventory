@@ -72,6 +72,15 @@ li {
   list-style: none;
 }
 
+#root>main:not(.user_auth) {
+  padding: 2rem;
+  border-radius: 2rem;
+  background-color: var(--dark-2);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 #root {
   box-sizing: border-box;
   padding: 2rem;

@@ -13,6 +13,8 @@ import entitiesRouter from "./routes/entitiesRouter.ts";
 import itemsRouter from "./routes/itemsRouter.ts";
 import usersRouter from "./routes/usersRouter.ts";
 
+const apiRouter = Router();
+
 const __dirname = path.resolve();
 
 const app = express();
@@ -21,10 +23,10 @@ const PORT = 3000;
 
 app.use(cors({
   origin: "http://localhost:5173"
-}))
+}));
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const apiRouter = Router();
 app.use("/api", apiRouter);
 
 apiRouter.use("/users", usersRouter);

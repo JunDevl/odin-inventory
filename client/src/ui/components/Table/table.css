@@ -1,0 +1,27 @@
+h1 {
+  text-align: center;
+}
+
+.table-utils {
+  display: flex;
+  justify-content: stretch;
+  align-items: stretch;
+  padding: 1rem;
+  gap: 1.5rem;
+
+  & > .filter {
+    flex: 1;
+    display: flex;
+    
+    & > input {
+      font-size: 1.1rem;
+      flex: 1;
+      padding-inline: 1rem;
+    }
+  }
+
+  & > button {
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+  }
+}

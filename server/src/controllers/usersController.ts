@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import argon2 from "argon2"
-import { insertNewUser, retrieveUserPasswordHash, retrieveUserUUID } from "../models/db.ts";
+import { insertNewUser, retrieveUser } from "../models/db.ts";
+import { handlePromiseError } from "../utils.ts";
 
 export const createUser: RequestHandler = async (req, res) => {
   const { username, email, password } = req.body;
@@ -11,14 +12,18 @@ export const createUser: RequestHandler = async (req, res) => {
     timeCost: 5
   })
 
-  const createdUser = await insertNewUser(username, email, hashedPassword);
+  const createdUser = await handlePromiseError(insertNewUser(username, email, hashedPassword));
 
-  if (!createdUser) {
+  if (createdUser.error) {
     res.statusCode = 500
-    res.send("Error");
+    res.send(createdUser.error);
+    return;
   }
 
-  res.send("ok");
+  const [row] = createdUser;
+  const {id: createdUserUUID} = row as {id: string}
+
+  res.send(createdUserUUID);
 }
 
 export const authenticateUser: RequestHandler = async (req, res) => {
@@ -28,17 +33,21 @@ export const authenticateUser: RequestHandler = async (req, res) => {
   if (!email || !pass) {
     res.statusCode = 400;
     res.send("Invalid query parameters.");
-  }
-
-  const hash = await retrieveUserPasswordHash(email);
-
-  if (!hash || !hash[0]) {
-    res.statusCode = 404;
-    res.send("User not found.");
     return;
   }
 
-  const validated = await argon2.verify((hash[0] as unknown) as string, pass);
+  const dbRecord = await handlePromiseError(retrieveUser(email));
+
+  if (dbRecord.error) {
+    res.statusCode = 404;
+    res.send(dbRecord.error);
+    return;
+  }
+
+  const [row] = dbRecord;
+  const {id: uuid, password_hash: hash} = row as {id: string, password_hash: string};
+
+  const validated = await argon2.verify((hash as unknown) as string, pass);
 
   if (!validated) {
     res.statusCode = 401;
@@ -46,7 +55,5 @@ export const authenticateUser: RequestHandler = async (req, res) => {
     return;
   }
 
-  const uuid = await retrieveUserUUID(email);
-
-  res.send(uuid![0]);
+  res.send(uuid);
 }

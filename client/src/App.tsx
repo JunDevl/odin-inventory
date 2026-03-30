@@ -1,22 +1,39 @@
-import Sidebar from './components/Sidebar/Sidebar';
-import MainContent from './components/MainContent/MainContent';
-import Table from './components/Table/Table';
+import { useEffect, useState } from 'react';
+import Sidebar from './ui/components/Sidebar/Sidebar';
+import { Outlet, useNavigate, useParams } from 'react-router';
+import PageNotFound from './ui/pages/PageNotFound/PageNotFound';
 
-import './App.css';
-import { useState } from 'react';
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function App() {
-  const [selectedTab, setSelectedTab] = useState("stocks");
+  const navigate = useNavigate();
+  const [error, setError] = useState(false);
+
+  const { userUUID } = useParams();
+
+  if (!userUUID || !UUID_REGEX.test(userUUID)) {
+    return <PageNotFound />;
+  }
+
+  useEffect(() => {
+    const UUID = localStorage.getItem("userUUID");
+
+    if (!UUID) setError(true);
+  }, [])
 
   return (
     <>
-      <Sidebar selectedTab={selectedTab} />
+      {!error ? 
+        <>
+          <Sidebar />
 
-      <MainContent>
-        <Table>
-
-        </Table>
-      </MainContent>
+          <main>
+            <Outlet />
+          </main>
+        </>
+        :
+        <p className="error">ERROR</p>
+      }
     </>
   )
 }

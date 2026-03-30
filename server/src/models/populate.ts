@@ -8,13 +8,14 @@ import postgres from "postgres";
 import { readFileSync } from "node:fs";
 
 (async () => {
+
   try {
     const sqlSchema = readFileSync("./schema.sql", {encoding: "utf-8"});
 
     if (!sqlSchema) throw new Error ("Schema SQL files not found.");
 
-    const sql = postgres(`
-      postgresql://${
+    const sql = postgres(
+      `postgresql://${
         process.env["PGUSER"]
       }:${
         process.env["PGPASSWORD"]
@@ -22,8 +23,11 @@ import { readFileSync } from "node:fs";
         process.env["PGHOST"]
       }/${
         process.env["PGDATABASE"]
-      }`,
-      {ssl: true}
+      }?sslmode=${
+        process.env["PGSSLMODE"]
+      }&channel_binding=${
+        process.env["PGCHANNELBINDING"]
+      }`
     );
 
     const createdSchema = await sql.unsafe(sqlSchema);

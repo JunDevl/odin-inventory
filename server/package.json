@@ -5,7 +5,8 @@
   "main": "src/main.ts",
   "scripts": {
     "start": "node src/main.ts",
-    "dev": "nodemon src/main.ts"
+    "dev": "nodemon src/main.ts",
+    "debug": "nodemon --inspect src/main.ts"
   },
   "repository": {
     "type": "git",

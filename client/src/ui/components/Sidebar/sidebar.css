@@ -1,9 +1,5 @@
-li>p {
-  pointer-events: none;
-}
-
 .sidebar {
-  --li-padding: 1rem 4rem;
+  --li-padding: 1rem 3rem;
   --li-border-radius: 1rem;
   --color: var(--dark-3);
 
@@ -24,37 +20,44 @@ li>p {
     align-items: stretch;
     gap: 0.5rem;
 
-    &>li:not(.drop-down, .drop-items>li) {
-      padding: var(--li-padding);
-    }
-
     & li {
       box-sizing: border-box;
       border-radius: var(--li-border-radius);
       background-color: var(--color);
       text-align: center;
       cursor: pointer;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
 
       &:hover {
         background-color: oklch(from var(--color) calc(l + 0.1) c h);
       }
 
-      &[selected] {
+      &.selected {
         background-color: oklch(from var(--color) 50% 0.5 h);
+      }
+
+      & > * {
+        flex: 1;
+        text-align: center;
+        padding: var(--li-padding);
+
+        &:is(a) {
+          text-decoration: none;
+          color: inherit;
+        }
       }
     }
   }
 }
 
 .drop-down {
-  padding: 0;
-
-  &:has(li[selected]) {
+  &:has(.selected) {
     background-color: oklch(from var(--color) 50% 0.5 h);
   }
 
   &:hover {
-    background-color: var(--color);
     border-radius: var(--li-border-radius) 0 0 var(--li-border-radius);
 
     &:has(ul.hidden) {
@@ -63,11 +66,11 @@ li>p {
   }
 
   &>.title {
-    padding: var(--li-padding);
     anchor-name: --drop-down-title;
   }
 
   &>:not(.title) {
+    padding: 0;
     border-radius: 0 var(--li-border-radius) var(--li-border-radius) 0;
     background-color: var(--color);
     position: absolute;
@@ -86,7 +89,9 @@ li>p {
     }
 
     &>li {
-      padding: 1rem 2rem;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
 
       &:first-child {
         border-radius: 0 var(--li-border-radius) var(--li-border-radius) 0;
@@ -94,6 +99,11 @@ li>p {
 
       &:not(:first-child) {
         border-radius: var(--li-border-radius);
+      }
+
+      &>a {
+        flex: 1;
+        padding: 1rem 2rem;
       }
     }
   }
