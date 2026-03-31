@@ -21,7 +21,7 @@ export const createUser: RequestHandler = async (req, res) => {
   }
 
   const [row] = createdUser;
-  const {id: createdUserUUID} = row as {id: string}
+  const {id: createdUserUUID} = row;
 
   res.send(createdUserUUID);
 }

@@ -107,13 +107,13 @@ CREATE TABLE categories_of_items (
 
 CREATE TABLE item_units (
   user_id uuid REFERENCES users,
-  unit_id INTEGER GENERATED ALWAYS AS IDENTITY,
+  name TEXT,
 
-  name TEXT NOT NULL UNIQUE,
   description TEXT,
   wikipedia_url TEXT,
 
-  PRIMARY KEY (user_id, unit_id)
+  CONSTRAINT check_lowercase_email CHECK (LOWER(name) = name),
+  PRIMARY KEY (user_id, name)
 );
 
 CREATE TABLE items_unit_price_history (
@@ -123,13 +123,13 @@ CREATE TABLE items_unit_price_history (
   history_id INTEGER GENERATED ALWAYS AS IDENTITY,
 
   unit_user_id uuid NOT NULL,
-  unit_id INTEGER NOT NULL,
+  unit_name TEXT NOT NULL,
 
   price_cents INTEGER NOT NULL,
   priced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
   FOREIGN KEY (user_id, item_id) REFERENCES items (user_id, item_id),
-  FOREIGN KEY (unit_user_id, unit_id) REFERENCES item_units (user_id, unit_id),
+  FOREIGN KEY (unit_user_id, unit_name) REFERENCES item_units (user_id, name),
   PRIMARY KEY (user_id, item_id, history_id)
 );
 
@@ -146,9 +146,9 @@ CREATE TABLE operations (
 
   quantity NUMERIC NOT NULL,
 
-  adressee_user_id uuid NOT NULL,
-  adressee_entity_id INTEGER NOT NULL,
-  adressee_franchise_id INTEGER NOT NULL,
+  addressee_user_id uuid NOT NULL,
+  addressee_entity_id INTEGER NOT NULL,
+  addressee_franchise_id INTEGER NOT NULL,
 
   sendee_user_id uuid NOT NULL,
   sendee_entity_id INTEGER NOT NULL,
