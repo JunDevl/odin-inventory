@@ -23,7 +23,7 @@ export const createUser: RequestHandler = async (req, res) => {
   const [row] = createdUser;
   const {id: createdUserUUID} = row;
 
-  res.send(createdUserUUID);
+  res.send(createdUserUUID); 
 }
 
 export const authenticateUser: RequestHandler = async (req, res) => {

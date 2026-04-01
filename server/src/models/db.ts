@@ -6,7 +6,7 @@ import postgres from "postgres";
 import { handlePromiseError } from "../utils.ts";
 import type { UUID } from "node:crypto";
 
-type EntityType = "service_provider" | "provider" | "client";
+type EntityType = "service_provider" | "supplier" | "client";
 
 const sql = postgres(`
     postgresql://${
@@ -59,12 +59,12 @@ type insertOperationParams = {
   arrivedAt?: Date | null
 }
 
-export const insertOperation = async (
-  {userUuid, addressee, sendee, itemId, quantity, unit, priceCents, shippedAt, arrivedAt}: insertOperationParams) => 
-{
+export const insertUserOperation = async ({
+  userUuid, addressee, sendee, itemId, quantity, unit, priceCents, shippedAt, arrivedAt
+}: insertOperationParams) => {
   const {entityId: addresseeEntityId, franchiseId: adresseeFranchiseId} = addressee;
 
-  const {entityId: sendeeEntityId, franchiseId: sendeeFranchiseId} = addressee;
+  const {entityId: sendeeEntityId, franchiseId: sendeeFranchiseId} = sendee;
 
   let shippedAtQuery;
   let arrivedAtQuery;
@@ -157,30 +157,53 @@ export const insertOperation = async (
   }
 }
 
-export const retrieveOperation = async (userUuid: UUID, operationId: number) => {
-  const operation = await handlePromiseError(sql`
+const joinAllOperationsQuery = `
+  JOIN items ON CONCAT(items.user_id, items.item_id) = CONCAT(operations.user_id, operations_item_id)
+  JOIN items_unit_price_history ON CONCAT(items_unit_price_history.user_id, items_unit_price_history.unit_id, items_unit_price_history.history_id) = CONCAT(operations.user_id, operations.unit_id, operations.history_id)
+  JOIN entities_franchises ON CONCAT(addressee.user_id, addressee.entity_id, addressee.franchise_id) = CONCAT(operations.user_id, operations.entity_id, operations.franchise_id)
+  JOIN entities_franchises ON CONCAT(sendee.user_id, sendee.entity_id, sendee.franchise_id) = CONCAT(operations.user_id, operations.entity_id, operations.franchise_id)
+`
+
+export const retrieveUserOperation = async (userUuid: UUID, operationId: number, joinAll?: boolean) => {
+  const sqlQuery = `
     SELECT * FROM operations
     WHERE user_id = ${userUuid}
     AND operation_id = ${operationId}
-  `)
+  `
+
+  const operation = await handlePromiseError(joinAll ?
+    sql`
+      ${sqlQuery}
+      ${joinAllOperationsQuery}
+    ` : 
+    sql`${sqlQuery}`
+  )
 
   if (operation.error) throw new Error(operation.error);
 
   return operation;
 }
 
-export const retrieveAllUserOperation = async (userUuid: UUID) => {
-  const operations = await handlePromiseError(sql`
+export const retrieveAllUserOperation = async (userUuid: UUID, joinAll?: boolean) => {
+  const sqlQuery = `
     SELECT * FROM operations
     WHERE user_id = ${userUuid}
-  `)
+  `;
+
+  const operations = await handlePromiseError(joinAll ?
+    sql`
+      ${sqlQuery}
+      ${joinAllOperationsQuery}
+    ` :
+    sql`${sqlQuery}`
+  )
 
   if (operations.error) throw new Error(operations.error);
 
   return operations;
 }
 
-export const insertItem = async (userUuid: UUID, name: string, description?: string) => {
+export const insertUserItem = async (userUuid: UUID, name: string, description?: string) => {
   const created = await handlePromiseError(sql`
     INSERT INTO items (user_id, name, description)
     VALUE (${userUuid}, ${name}, ${description ?? "NULL"})
@@ -191,30 +214,48 @@ export const insertItem = async (userUuid: UUID, name: string, description?: str
   return created;
 }
 
-export const retrieveItem = async (userUuid: UUID, itemId: number) => {
-  const item = await handlePromiseError(sql`
+const joinItemCategoryQuery = `
+  JOIN categories_of_items ON CONCAT(categories_of_items.item_user_id, categories_of_items.item_id) = CONCAT(items.user_id, items.item_id)
+`
+
+export const retrieveUserItem = async (userUuid: UUID, itemId: number, joinCategory?: boolean) => {
+  const sqlQuery = `
     SELECT * FROM items
     WHERE user_id = ${userUuid}
     AND item_id = ${itemId}
-  `)
+  `
 
-  if (item.error) throw new Error(item.error);
+  const item = await handlePromiseError(joinCategory ?
+    sql`
+      ${sqlQuery}
+      ${joinItemCategoryQuery}
+    ` :
+    sql`${sqlQuery}`
+  )
 
   return item;
 }
 
-export const retrieveAllUserItems = async (userUuid: UUID) => {
-  const items = await handlePromiseError(sql`
+export const retrieveAllUserItems = async (userUuid: UUID, joinCategory?: boolean) => {
+  const sqlQuery = `
     SELECT * FROM items
     WHERE user_id = ${userUuid}
-  `)
+  `
+
+  const items = await handlePromiseError(joinCategory ?
+    sql`
+      ${sqlQuery}
+      ${joinItemCategoryQuery}
+    ` :
+    sql`${sqlQuery}`
+  )
 
   if (items.error) throw new Error(items.error);
 
   return items;
 }
 
-export const insertItemCategory = async (userUuid: UUID, name: string, description?: string) => {
+export const insertUserItemCategory = async (userUuid: UUID, name: string, description?: string) => {
   const created = await handlePromiseError(sql`
     INSERT INTO item_categories (user_id, name, description)
     VALUE (${userUuid}, ${name}, ${description ?? "NULL"})
@@ -225,7 +266,7 @@ export const insertItemCategory = async (userUuid: UUID, name: string, descripti
   return created;
 }
 
-export const addCategoryToItem = async (userUuid: UUID, itemId: number, categoryId: number) => {
+export const addUserCategoryToItem = async (userUuid: UUID, itemId: number, categoryId: number) => {
   const created = await handlePromiseError(sql`
     INSERT INTO categories_of_items (item_user_id, item_id, category_user_id, category_id)
     VALUE (${userUuid}, ${itemId}, ${userUuid}, ${categoryId})
@@ -236,7 +277,7 @@ export const addCategoryToItem = async (userUuid: UUID, itemId: number, category
   return created;
 }
 
-export const retrieveItemCategory = async (userUuid: UUID, categoryId: number) => {
+export const retrieveUserItemCategory = async (userUuid: UUID, categoryId: number) => {
   const category = await handlePromiseError(sql`
     SELECT * FROM item_categories
     WHERE user_id = ${userUuid}
@@ -259,7 +300,7 @@ export const retrieveAllUserItemCategories = async (userUuid: UUID) => {
   return categories;
 }
 
-export const insertEntityFranchise = async (userUuid: UUID, name: string, address: string, trade?: string) => {
+export const insertUserEntityFranchise = async (userUuid: UUID, name: string, address: string, trade?: string) => {
   const createdEntity = await handlePromiseError(sql`
     INSERT INTO entities (user_id, name, trade)
     VALUE (${userUuid}, ${name}, ${trade ?? "NULL"})
@@ -285,26 +326,134 @@ export const insertEntityFranchise = async (userUuid: UUID, name: string, addres
   return createdFranchise;
 }
 
-export const retrieveUserEntityFranchise = async (userUuid: UUID, entityId: number, franchiseId: number) => {
-  const entityFranchise = await handlePromiseError(sql`
-    SELECT * FROM entities_franchises
+const joinFranchiseTypeQuery = (franchiseType: EntityType) => {
+  const tableName = `outsourced_${franchiseType}_entity_franchises`
+
+  return `
+    JOIN ${sql(tableName)}
+    ON CONCAT(${tableName}.user_id, ${tableName}.entity_id, ${tableName}.franchise_id) = (entities_franchises.user_id, entities_franchises.entity_id, entities_franchises.franchise_id)
+  `
+}
+
+export const retrieveUserEntityFranchise = async (userUuid: UUID, entityId: number, franchiseId: number, joinType: EntityType) => {
+  const sqlQuery = `
+    SELECT * FROM entities
     WHERE user_id = ${userUuid}
     AND entity_id = ${entityId}
-    AND franchise_id = ${franchiseId}
-  `)
+    JOIN entities_franchises ON CONCAT(entities_franchises.user_id, entities_franchises.entity_id, entities_franchises.franchise_id) = CONCAT(entities.user_id, entities.entity_id, ${franchiseId})
+  `
+
+  const entityFranchise = await handlePromiseError(joinType ?
+    sql`
+      ${sqlQuery}
+      ${joinFranchiseTypeQuery(joinType)}
+    ` :
+    sql`${sqlQuery}`
+  )
 
   if (entityFranchise.error) throw new Error(entityFranchise.error);
 
   return entityFranchise;
 }
 
-export const retrieveAllUserEntityFranchises = async (userUuid: UUID) => {
+export const retrieveAllUserEntityFranchises = async (userUuid: UUID, joinType: EntityType) => {
+  const sqlQuery = sql`
+    SELECT * FROM entities
+    WHERE user_id = ${userUuid}
+    JOIN entities_franchises ON CONCAT(entities_franchises.user_id, entities_franchises.entity_id) = CONCAT(entities.user_id, entities.entity_id)
+  `
+
+  const entitiesFranchises = await handlePromiseError(joinType ? 
+    sql`
+      ${sqlQuery}
+      ${joinFranchiseTypeQuery(joinType)}
+    ` : 
+    sql`${sqlQuery}`
+  );
+
+  if (entitiesFranchises.error) throw new Error(entitiesFranchises.error);
+
+  return entitiesFranchises;
+}
+
+export const addTypeToEntityFranchise = async (userUuid: UUID, entityId: number, franchiseId: number, type: EntityType) => {
+  const created = await handlePromiseError(sql`
+    INSERT INTO ${sql(`outsourced_${type}_entity_franchises`)} 
+    VALUE (${userUuid}, ${entityId}, ${franchiseId})
+  `)
+
+  if (created.error) throw new Error(created.error);
+
+  return created;
+}
+
+export const retrieveAllUserEntityFranchisesOfType = async (userUuid: UUID, type: EntityType) => {
+  const tableName = `outsourced_${type}_entity_franchises`
+
   const entitiesFranchises = await handlePromiseError(sql`
     SELECT * FROM entities_franchises
-    WHERE user_id = ${userUuid}
+    JOIN ${sql(tableName)} 
+    ON CONCAT(${sql(tableName)}.user_id, ${sql(tableName)}.entity_id, ${sql(tableName)}.franchise_id) = CONCAT(${userUuid}, entities_franchises.entity_id, entities_franchises.franchise_id)
   `)
 
   if (entitiesFranchises.error) throw new Error(entitiesFranchises.error);
 
   return entitiesFranchises;
+}
+
+export const insertUserStorageArea = async (userUuid: UUID, entityId: number, franchiseId: number, name: string, description: string, locationReference: string, address?: string) => {
+  const createdStorage = await handlePromiseError(sql`
+    INSERT INTO storage_areas (user_id, entity_id, franchise_id, name, description, location_reference, address)
+    VALUE (${userUuid}, ${entityId}, ${franchiseId}, ${name}, ${description}, ${locationReference}, ${address ?? "NULL"})
+    RETURNING storage_id
+  `)
+
+  if (createdStorage.error) throw new Error(createdStorage.error);
+
+  return createdStorage;
+}
+
+const joinEntityFranchiseQuery = `
+  JOIN entities_franchises
+  ON CONCAT(entities_franchises.user_id, entities_franchises.entity_id, entities_franchises.franchise_id) = CONCAT(storage_areas.user_id, storage_areas.entity_id, storage_areas.franchise_id)
+`
+
+export const retrieveUserStorageArea = async (userUuid: UUID, entityId: number, franchiseId: number, storageAreaId: number, joinFranchise?: boolean) => {
+  const sqlQuery = `
+    SELECT * FROM storage_areas
+    WHERE user_id = ${userUuid}
+    AND entity_id = ${entityId}
+    AND franchise_id = ${entityId}
+  `
+
+  const storageArea = await handlePromiseError(joinFranchise ? 
+    sql`
+      ${sqlQuery}
+      ${joinEntityFranchiseQuery}
+    ` :
+    sql`${sqlQuery}`
+  )
+
+  if (storageArea.error) throw new Error(storageArea.error);
+
+  return storageArea;
+}
+
+export const retrieveAlUserStorageAreas = async (userUuid: UUID, joinFranchise?: boolean) => {
+  const sqlQuery = `
+    SELECT * FROM storage_areas
+    WHERE user_id = ${userUuid}
+  `
+
+  const storageArea = await handlePromiseError(joinFranchise ? 
+    sql`
+      ${sqlQuery}
+      ${joinEntityFranchiseQuery}
+    ` :
+    sql`${sqlQuery}`
+  )
+
+  if (storageArea.error) throw new Error(storageArea.error);
+
+  return storageArea;
 }

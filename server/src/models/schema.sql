@@ -63,6 +63,7 @@ CREATE TABLE storage_areas (
 
   storage_id INTEGER GENERATED ALWAYS AS IDENTITY,
 
+  name TEXT NOT NULL,
   description TEXT NOT NULL,
   location_reference TEXT NOT NULL,
   address TEXT,
