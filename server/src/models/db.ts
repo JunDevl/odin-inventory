@@ -3,7 +3,7 @@ import { config } from "dotenv";
 config();
 
 import postgres from "postgres";
-import { handlePromiseError } from "../utils.ts";
+import { errorHandler } from "../../../utils.ts";
 import type { UUID } from "node:crypto";
 
 type EntityType = "service_provider" | "supplier" | "client";
@@ -23,7 +23,7 @@ const sql = postgres(`
 );
 
 export const insertNewUser = async (username: string, email: string, hashedPassword: string) => {
-  const created = await handlePromiseError(sql`
+  const created = await errorHandler(sql`
     INSERT INTO users (name, email, password_hash)
     VALUES (${username}, ${email}, ${hashedPassword})
     RETURNING users.id
@@ -35,7 +35,7 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
 }
 
 export const retrieveUser = async (email: string) => {
-  const user = await handlePromiseError(sql`
+  const user = await errorHandler(sql`
     SELECT * FROM users
     WHERE email = ${email}
   `)
@@ -116,7 +116,7 @@ export const insertUserOperation = async ({
   let created;
 
   if (priceCents) {
-    const insertedHistory = await handlePromiseError(sql`
+    const insertedHistory = await errorHandler(sql`
       INSERT INTO 
       items_unit_price_history (user_id, item_id, unit_user_id, unit_name, price_cents)
       VALUE (${userUuid}, ${itemId}, ${userUuid}, ${unit}, ${priceCents})
@@ -131,7 +131,7 @@ export const insertUserOperation = async ({
     const [row] = insertedHistory;
     const {history_id} = row;
 
-    created = await handlePromiseError(sql`${createdOperationQuery(history_id)}`);
+    created = await errorHandler(sql`${createdOperationQuery(history_id)}`);
 
     if (created.error) {
       await sql`ROLLBACK`;
@@ -140,7 +140,7 @@ export const insertUserOperation = async ({
 
     return created;
   } else {
-    const lastPrice = await handlePromiseError(sql`SELECT (history_id) FROM (
+    const lastPrice = await errorHandler(sql`SELECT (history_id) FROM (
       SELECT MAX(priced_at) FROM items_unit_price_history
     )`)
 
@@ -149,7 +149,7 @@ export const insertUserOperation = async ({
     const [row] = lastPrice;
     const {history_id} = row;
 
-    created = await handlePromiseError(sql`${createdOperationQuery(history_id)}`);
+    created = await errorHandler(sql`${createdOperationQuery(history_id)}`);
 
     if (created.error) throw new Error(created.error);
 
@@ -171,7 +171,7 @@ export const retrieveUserOperation = async (userUuid: UUID, operationId: number,
     AND operation_id = ${operationId}
   `
 
-  const operation = await handlePromiseError(joinAll ?
+  const operation = await errorHandler(joinAll ?
     sql`
       ${sqlQuery}
       ${joinAllOperationsQuery}
@@ -190,7 +190,7 @@ export const retrieveAllUserOperation = async (userUuid: UUID, joinAll?: boolean
     WHERE user_id = ${userUuid}
   `;
 
-  const operations = await handlePromiseError(joinAll ?
+  const operations = await errorHandler(joinAll ?
     sql`
       ${sqlQuery}
       ${joinAllOperationsQuery}
@@ -204,7 +204,7 @@ export const retrieveAllUserOperation = async (userUuid: UUID, joinAll?: boolean
 }
 
 export const insertUserItem = async (userUuid: UUID, name: string, description?: string) => {
-  const created = await handlePromiseError(sql`
+  const created = await errorHandler(sql`
     INSERT INTO items (user_id, name, description)
     VALUE (${userUuid}, ${name}, ${description ?? "NULL"})
   `)
@@ -225,7 +225,7 @@ export const retrieveUserItem = async (userUuid: UUID, itemId: number, joinCateg
     AND item_id = ${itemId}
   `
 
-  const item = await handlePromiseError(joinCategory ?
+  const item = await errorHandler(joinCategory ?
     sql`
       ${sqlQuery}
       ${joinItemCategoryQuery}
@@ -242,7 +242,7 @@ export const retrieveAllUserItems = async (userUuid: UUID, joinCategory?: boolea
     WHERE user_id = ${userUuid}
   `
 
-  const items = await handlePromiseError(joinCategory ?
+  const items = await errorHandler(joinCategory ?
     sql`
       ${sqlQuery}
       ${joinItemCategoryQuery}
@@ -256,7 +256,7 @@ export const retrieveAllUserItems = async (userUuid: UUID, joinCategory?: boolea
 }
 
 export const insertUserItemCategory = async (userUuid: UUID, name: string, description?: string) => {
-  const created = await handlePromiseError(sql`
+  const created = await errorHandler(sql`
     INSERT INTO item_categories (user_id, name, description)
     VALUE (${userUuid}, ${name}, ${description ?? "NULL"})
   `)
@@ -267,7 +267,7 @@ export const insertUserItemCategory = async (userUuid: UUID, name: string, descr
 }
 
 export const addUserCategoryToItem = async (userUuid: UUID, itemId: number, categoryId: number) => {
-  const created = await handlePromiseError(sql`
+  const created = await errorHandler(sql`
     INSERT INTO categories_of_items (item_user_id, item_id, category_user_id, category_id)
     VALUE (${userUuid}, ${itemId}, ${userUuid}, ${categoryId})
   `)
@@ -278,7 +278,7 @@ export const addUserCategoryToItem = async (userUuid: UUID, itemId: number, cate
 }
 
 export const retrieveUserItemCategory = async (userUuid: UUID, categoryId: number) => {
-  const category = await handlePromiseError(sql`
+  const category = await errorHandler(sql`
     SELECT * FROM item_categories
     WHERE user_id = ${userUuid}
     AND item_id = ${categoryId}
@@ -290,7 +290,7 @@ export const retrieveUserItemCategory = async (userUuid: UUID, categoryId: numbe
 }
 
 export const retrieveAllUserItemCategories = async (userUuid: UUID) => {
-  const categories = await handlePromiseError(sql`
+  const categories = await errorHandler(sql`
     SELECT * FROM item_categories
     WHERE user_id = ${userUuid}
   `)
@@ -301,7 +301,7 @@ export const retrieveAllUserItemCategories = async (userUuid: UUID) => {
 }
 
 export const insertUserEntityFranchise = async (userUuid: UUID, name: string, address: string, trade?: string) => {
-  const createdEntity = await handlePromiseError(sql`
+  const createdEntity = await errorHandler(sql`
     INSERT INTO entities (user_id, name, trade)
     VALUE (${userUuid}, ${name}, ${trade ?? "NULL"})
     RETURNING entity_id
@@ -312,7 +312,7 @@ export const insertUserEntityFranchise = async (userUuid: UUID, name: string, ad
   const [entityRow] = createdEntity;
   const {entity_id} = entityRow;
 
-  const createdFranchise = await handlePromiseError(sql`
+  const createdFranchise = await errorHandler(sql`
     INSERT INTO entities_ranchises (user_id, entity_id, address)
     VALUE (${userUuid}, ${entity_id}, ${address})
     RETURNING (user_id, franchise_id)
@@ -343,7 +343,7 @@ export const retrieveUserEntityFranchise = async (userUuid: UUID, entityId: numb
     JOIN entities_franchises ON CONCAT(entities_franchises.user_id, entities_franchises.entity_id, entities_franchises.franchise_id) = CONCAT(entities.user_id, entities.entity_id, ${franchiseId})
   `
 
-  const entityFranchise = await handlePromiseError(joinType ?
+  const entityFranchise = await errorHandler(joinType ?
     sql`
       ${sqlQuery}
       ${joinFranchiseTypeQuery(joinType)}
@@ -363,7 +363,7 @@ export const retrieveAllUserEntityFranchises = async (userUuid: UUID, joinType: 
     JOIN entities_franchises ON CONCAT(entities_franchises.user_id, entities_franchises.entity_id) = CONCAT(entities.user_id, entities.entity_id)
   `
 
-  const entitiesFranchises = await handlePromiseError(joinType ? 
+  const entitiesFranchises = await errorHandler(joinType ? 
     sql`
       ${sqlQuery}
       ${joinFranchiseTypeQuery(joinType)}
@@ -377,7 +377,7 @@ export const retrieveAllUserEntityFranchises = async (userUuid: UUID, joinType: 
 }
 
 export const addTypeToEntityFranchise = async (userUuid: UUID, entityId: number, franchiseId: number, type: EntityType) => {
-  const created = await handlePromiseError(sql`
+  const created = await errorHandler(sql`
     INSERT INTO ${sql(`outsourced_${type}_entity_franchises`)} 
     VALUE (${userUuid}, ${entityId}, ${franchiseId})
   `)
@@ -390,7 +390,7 @@ export const addTypeToEntityFranchise = async (userUuid: UUID, entityId: number,
 export const retrieveAllUserEntityFranchisesOfType = async (userUuid: UUID, type: EntityType) => {
   const tableName = `outsourced_${type}_entity_franchises`
 
-  const entitiesFranchises = await handlePromiseError(sql`
+  const entitiesFranchises = await errorHandler(sql`
     SELECT * FROM entities_franchises
     JOIN ${sql(tableName)} 
     ON CONCAT(${sql(tableName)}.user_id, ${sql(tableName)}.entity_id, ${sql(tableName)}.franchise_id) = CONCAT(${userUuid}, entities_franchises.entity_id, entities_franchises.franchise_id)
@@ -402,7 +402,7 @@ export const retrieveAllUserEntityFranchisesOfType = async (userUuid: UUID, type
 }
 
 export const insertUserStorageArea = async (userUuid: UUID, entityId: number, franchiseId: number, name: string, description: string, locationReference: string, address?: string) => {
-  const createdStorage = await handlePromiseError(sql`
+  const createdStorage = await errorHandler(sql`
     INSERT INTO storage_areas (user_id, entity_id, franchise_id, name, description, location_reference, address)
     VALUE (${userUuid}, ${entityId}, ${franchiseId}, ${name}, ${description}, ${locationReference}, ${address ?? "NULL"})
     RETURNING storage_id
@@ -426,7 +426,7 @@ export const retrieveUserStorageArea = async (userUuid: UUID, entityId: number, 
     AND franchise_id = ${entityId}
   `
 
-  const storageArea = await handlePromiseError(joinFranchise ? 
+  const storageArea = await errorHandler(joinFranchise ? 
     sql`
       ${sqlQuery}
       ${joinEntityFranchiseQuery}
@@ -445,7 +445,7 @@ export const retrieveAlUserStorageAreas = async (userUuid: UUID, joinFranchise?:
     WHERE user_id = ${userUuid}
   `
 
-  const storageArea = await handlePromiseError(joinFranchise ? 
+  const storageArea = await errorHandler(joinFranchise ? 
     sql`
       ${sqlQuery}
       ${joinEntityFranchiseQuery}

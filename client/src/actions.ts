@@ -1,14 +1,13 @@
 type Data = "stocks" | "operations" | "storages" | "entities" | "avaliable_items" | "item_categories"
 
 export const validateUser = async (email: string, password: string) => {
-  try {
-    const data = await fetch(`${import.meta.env["VITE_API_URI"]!}/users/auth?email=${email}&pass=${password}`);
-    const userUUID = await data.text();
+  const data = await fetch(`${import.meta.env["VITE_API_URI"]!}/users/auth?email=${email}&pass=${password}`);
 
-    return userUUID;
-  } catch (e) {
-    console.log(e);
-  }
+  const userUUID = await data.text();
+
+  if (!data.ok) throw new Error(userUUID);
+
+  return userUUID;
 }
 
 export const createNewUser = async (username: string, email: string, password: string) => {

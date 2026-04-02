@@ -15,6 +15,9 @@
   --dark-1: oklch(from var(--primary-color) 14% 0.008 h);
   --dark-2: oklch(from var(--primary-color) 20% 0.012 h);
   --dark-3: oklch(from var(--primary-color) 24% 0.016 h);
+  --dark-4: oklch(from var(--primary-color) 26% 0.018 h);
+  --dark-5: oklch(from var(--primary-color) 28% 0.020 h);
+
 
   --lighter: oklch(from var(--primary-color) 98% 0.01 h);
   --light-1: oklch(from var(--primary-color) 96% 0.03 h);

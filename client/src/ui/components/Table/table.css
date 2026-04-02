@@ -9,19 +9,37 @@ h1 {
   padding: 1rem;
   gap: 1.5rem;
 
-  & > .filter {
+  &>.filter {
     flex: 1;
     display: flex;
-    
-    & > input {
+
+    &>input {
       font-size: 1.1rem;
       flex: 1;
       padding-inline: 1rem;
     }
   }
 
-  & > button {
+  &>button {
     font-size: 1.1rem;
     padding: 0.5rem 1rem;
+  }
+}
+
+table {
+
+  & th,
+  & td {
+    padding: 0.5rem 1rem;
+    border-block: 1px solid var(--dark-4);
+    border-inline: 1px solid var(--dark-5)
+  }
+
+  &>thead {
+    background-color: var(--dark-3);
+  }
+
+  &>tbody {
+    background-color: var(--dark-3);
   }
 }
