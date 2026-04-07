@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import argon2 from "argon2"
 import { insertNewUser, retrieveUser } from "../models/db.ts";
-import { errorHandler } from "../../../utils.ts";
+import { errorHandler, PromiseError } from "@app/utils";
 
 export const createUser: RequestHandler = async (req, res) => {
   const { username, email, password } = req.body;
@@ -14,14 +14,14 @@ export const createUser: RequestHandler = async (req, res) => {
 
   const createdUser = await errorHandler(insertNewUser(username, email, hashedPassword));
 
-  if (createdUser.error) {
+  if (createdUser instanceof PromiseError) {
     res.statusCode = 500
     res.send(createdUser.error);
     return;
   }
 
   const [row] = createdUser;
-  const {id: createdUserUUID} = row;
+  const {id: createdUserUUID} = row!;
 
   res.send(createdUserUUID); 
 }
@@ -38,7 +38,7 @@ export const authenticateUser: RequestHandler = async (req, res) => {
 
   const dbRecord = await errorHandler(retrieveUser(email));
 
-  if (dbRecord.error) {
+  if (dbRecord instanceof PromiseError) {
     res.statusCode = 404;
     res.send(dbRecord.error);
     return;

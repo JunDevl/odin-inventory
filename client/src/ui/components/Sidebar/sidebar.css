@@ -5,15 +5,19 @@
 
   isolation: isolate;
   border-radius: 2rem;
-  background-color: var(--dark-3);
+  background-color: var(--color);
 
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   padding: 0.5rem;
   font-size: 1.25rem;
 
-  & ul {
-    background-color: var(--color);
+  &>.top {
     flex: 1;
+  }
+
+  & ul {
     display: flex;
     flex-direction: column;
     justify-content: start;
@@ -23,7 +27,6 @@
     & li {
       box-sizing: border-box;
       border-radius: var(--li-border-radius);
-      background-color: var(--color);
       text-align: center;
       cursor: pointer;
       display: flex;
@@ -38,7 +41,7 @@
         background-color: oklch(from var(--color) 50% 0.5 h);
       }
 
-      & > * {
+      &>* {
         flex: 1;
         text-align: center;
         padding: var(--li-padding);
@@ -47,6 +50,12 @@
           text-decoration: none;
           color: inherit;
         }
+      }
+
+      &:not(:has(*)) {
+        display: flex;
+        justify-content: center;
+        padding: var(--li-padding);
       }
     }
   }

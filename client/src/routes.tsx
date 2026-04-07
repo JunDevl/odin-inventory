@@ -1,7 +1,6 @@
 import { Navigate, type RouteObject } from "react-router";
 import App from "./App";
 import Operations from "./ui/pages/Operations/Operations";
-import Storages from "./ui/pages/Storages/Storages";
 import Entities from "./ui/pages/Entities/Entities";
 import AvaliableItems from "./ui/pages/AvaliableItems/AvaliableItems";
 import ItemCategories from "./ui/pages/ItemCategories/ItemCategories";
@@ -9,6 +8,7 @@ import Stocks from "./ui/pages/Stocks/Stocks";
 import Auth from "./ui/pages/Auth/Auth";
 import PageNotFound from "./ui/pages/PageNotFound/PageNotFound";
 
+const userAuthId = localStorage.getItem("userUUID");
 
 const routes: RouteObject[] = [
   {
@@ -16,7 +16,7 @@ const routes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <Navigate to="/auth" replace />
+        element: <Navigate to={userAuthId ? `/${userAuthId}/stocks` : `/auth`} replace />
       },
       {
         path: "auth",
@@ -33,10 +33,6 @@ const routes: RouteObject[] = [
           {
             path: "operations",
             element: <Operations />
-          },
-          {
-            path: "storages",
-            element: <Storages />
           },
           {
             path: "entities",

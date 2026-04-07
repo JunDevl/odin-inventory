@@ -1,7 +1,20 @@
 import type { RequestHandler } from "express";
+import { retrieveAllUserItemCategories, retrieveAllUserItems } from "../models/db.ts";
+import { errorHandler, PromiseError } from "@app/utils";
+import type { UUID } from "node:crypto";
 
 export const getAllItemCategories: RequestHandler = async (req, res) => {
-  res.json({ itemCategories: true });
+  const id = req.query.userId as UUID;
+
+  const categories = await errorHandler(retrieveAllUserItemCategories(id));
+
+  if (categories instanceof PromiseError) {
+    res.statusCode = 404;
+    res.send(categories.error);
+    return;
+  }
+
+  return categories;
 }
 
 export const getItemCategory: RequestHandler = async (req, res) => {
@@ -9,7 +22,17 @@ export const getItemCategory: RequestHandler = async (req, res) => {
 }
 
 export const getAllAvaliableItems: RequestHandler = async (req, res) => {
-  res.json({ avaliableItems: true });
+  const id = req.query.userId as UUID;
+
+  const items = await errorHandler(retrieveAllUserItems(id));
+
+  if (items instanceof PromiseError) {
+    res.statusCode = 404;
+    res.send(items.error);
+    return;
+  }
+
+  return items;
 }
 
 export const getAvaliableItem: RequestHandler = async (req, res) => {

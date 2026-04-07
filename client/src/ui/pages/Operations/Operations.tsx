@@ -1,36 +1,23 @@
-import { useEffect, useState } from "react";
 import Table from "../../components/Table/Table";
 import { fetchAll } from "../../../actions";
+import { useQuery } from "@tanstack/react-query";
 
 type OperationsProps = {}
 
-const mockdata = [
-  {
-    abba: "abba", 
-    boubba: "boubba"
-  },
-  {
-    abba: "abba", 
-    boubba: "boubba"
-  }
-]
-
 const Operations = (props: OperationsProps) => {
 
-  const [operations, setOperations] = useState(async () => {
-    const stored = localStorage.getItem("operations");
-
-    if (!stored) {
-      const data = await fetchAll("operations");
-      console.log(data);
-      return data;
-    }
+  const {status, error, data: operations} = useQuery({
+    queryKey: ["operations"],
+    queryFn: () => fetchAll("operations")
   })
+
+  if (status === "pending") return <p>Loading...</p>
+
+  if (error) return <p>Error</p>
 
   return (
     <>
-      <Table title="Operations" columns={["abba", "boubba"]} rowData={mockdata}>
-
+      <Table title="Operations" dataArray={operations}>
       </Table>
     </>
   )

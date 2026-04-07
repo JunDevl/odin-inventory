@@ -8,7 +8,6 @@ import path from "path";
 
 import stocksRouter from "./routes/stocksRouter.ts";
 import operationsRouter from "./routes/operationsRouter.ts";
-import storagesRouter from "./routes/storagesRouter.ts";
 import entitiesRouter from "./routes/entitiesRouter.ts";
 import itemsRouter from "./routes/itemsRouter.ts";
 import usersRouter from "./routes/usersRouter.ts";
@@ -33,7 +32,6 @@ apiRouter.use("/users", usersRouter);
 
 apiRouter.use("/stocks", stocksRouter);
 apiRouter.use("/operations", operationsRouter);
-apiRouter.use("/storages", storagesRouter);
 apiRouter.use("/entities", entitiesRouter);
 apiRouter.use("/items", itemsRouter);
 

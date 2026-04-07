@@ -31,20 +31,13 @@ const Sidebar = (props: SidebarProps) => {
 
   return (
     <nav className="sidebar">
-      <ul>
-        <li id="menu_toggle">
-          <p className="menu">
-            Menu
-          </p>
-        </li>
+      <ul className="top">
+        <li id="menu_toggle">Menu</li>
         <li id="stocks" className={location.pathname === getRelativePath("stocks") ? "selected" : ""}>
           <Link to={getRelativePath("stocks")} relative="path">Stocks</Link>
         </li>
         <li id="operations" className={location.pathname === getRelativePath("operations") ? "selected" : ""}>
           <Link to={getRelativePath("operations")} relative="path">Operations</Link>
-        </li>
-        <li id="storage_areas" className={location.pathname === getRelativePath("storages") ? "selected" : ""}>
-          <Link to={getRelativePath("storages")} relative="path">Storage Areas</Link>
         </li>
         <li id="clients/suppliers" className={location.pathname === getRelativePath("entities") ? "selected" : ""}>
           <Link to={getRelativePath("entities")} relative="path">Clients/Providers</Link>
@@ -69,6 +62,9 @@ const Sidebar = (props: SidebarProps) => {
             </li>
           </ul>
         </li>
+      </ul>
+      <ul className="bottom">
+        <li>Account</li>
       </ul>
     </nav>
   )

@@ -29,47 +29,18 @@ CREATE TABLE entities_franchises (
 
 CREATE INDEX entities_franchises_idx ON entities_franchises(user_id);
 
-CREATE TABLE outsourced_client_entity_franchises (
-  user_id uuid,
-  entity_id INTEGER,
-  franchise_id INTEGER,
-
-  FOREIGN KEY (user_id, entity_id, franchise_id) REFERENCES entities_franchises (user_id, entity_id, franchise_id),
-  PRIMARY KEY (user_id, entity_id, franchise_id)
+CREATE TYPE entity_kind AS ENUM (
+  'client', 'supplier', 'service_provider'
 );
 
-CREATE TABLE outsourced_supplier_entity_franchises (
+CREATE TABLE outsourced_entity_franchise_types (
   user_id uuid,
   entity_id INTEGER,
   franchise_id INTEGER,
+  type entity_kind
 
   FOREIGN KEY (user_id, entity_id, franchise_id) REFERENCES entities_franchises (user_id, entity_id, franchise_id),
-  PRIMARY KEY (user_id, entity_id, franchise_id)
-);
-
-CREATE TABLE outsourced_service_provider_entity_franchises (
-  user_id uuid,
-  entity_id INTEGER,
-  franchise_id INTEGER,
-
-  FOREIGN KEY (user_id, entity_id, franchise_id) REFERENCES entities_franchises (user_id, entity_id, franchise_id),
-  PRIMARY KEY (user_id, entity_id, franchise_id)
-);
-
-CREATE TABLE storage_areas (
-  user_id uuid,
-  entity_id INTEGER,
-  franchise_id INTEGER,
-
-  storage_id INTEGER GENERATED ALWAYS AS IDENTITY,
-
-  name TEXT NOT NULL,
-  description TEXT NOT NULL,
-  location_reference TEXT NOT NULL,
-  address TEXT,
-
-  FOREIGN KEY (user_id, entity_id, franchise_id) REFERENCES entities_franchises (user_id, entity_id, franchise_id),
-  PRIMARY KEY (user_id, entity_id, franchise_id, storage_id)
+  PRIMARY KEY (user_id, entity_id, franchise_id, type)
 );
 
 CREATE TABLE items (
@@ -113,7 +84,6 @@ CREATE TABLE item_units (
   description TEXT,
   wikipedia_url TEXT,
 
-  CONSTRAINT check_lowercase_email CHECK (LOWER(name) = name),
   PRIMARY KEY (user_id, name)
 );
 
