@@ -46,6 +46,9 @@ export const items = [
   },
   {
     name: "Apple"
+  },
+  {
+    name: "Glock G17"
   }
 ]
 
@@ -86,40 +89,51 @@ export const entityFranchises = [
   {
     name: "Microsoft Corporation",
     trade: "Microsoft",
-    address: "1 Microsoft Way, Bldg 37, Redmond, Washington 98052, United States"
+    address: "1 Microsoft Way, Bldg 37, Redmond, Washington 98052, United States",
+    type: "supplier"
   },
   {
     name: "Microsoft Corporation",
     trade: "Microsoft",
-    address: "807, New Delhi House, Barakhamba Road, New Delhi - 110001, India."
+    address: "807, New Delhi House, Barakhamba Road, New Delhi - 110001, India.",
+    type: "service_provider"
   },
   {
     name: "Massey Ferguson Corp.",
     trade: "Massey Ferguson",
-    address: "4205 River Green Parkway Duluth, GA 30096 United States"
+    address: "4205 River Green Parkway Duluth, GA 30096 United States",
+    type: "supplier"
   },
   {
     name: "Taurus Holdings, Inc.",
     trade: "Taurus",
-    address: "16175 Northwest 49 Avenue Miami Lakes, FL 33014"
+    address: "16175 Northwest 49 Avenue Miami Lakes, FL 33014",
+    type: "supplier"
   },
   {
     name: "Taurus Holdings, Inc.",
     trade: "Taurus",
-    address: "Avenida Sao Borja, 2181, Fazenda Sao Borja, Sao Leopoldo, RS"
+    address: "Avenida Sao Borja, 2181, Fazenda Sao Borja, Sao Leopoldo, RS",
+    type: "supplier"
+  },
+  {
+    name: "Nord Keyboards",
+    trade: "Nord",
+    address: "Clavia Digital Musical Instruments AB, BOX 4214, SE-102 65 Stockholm, Sweden"
   },
   {
     name: "Mark",
-    address: "House of Mark"
+    address: "House of Mark",
+    type: "client"
   }
 ]
 
 export const unitPriceHistory = [
   {
-    item_id: 4,
+    item_id: 7,
     unit: "unit",
-    price_cents: 599900,
-    priced_at: 1775414319
+    price_cents: 55000,
+    priced_at: 1759000000
   },
   {
     item_id: 6,
@@ -134,6 +148,12 @@ export const unitPriceHistory = [
     priced_at: 1765000000
   },
   {
+    item_id: 4,
+    unit: "unit",
+    price_cents: 599900,
+    priced_at: 1767225600
+  },
+  {
     item_id: 6,
     unit: "kg",
     price_cents: 90,
@@ -141,3 +161,35 @@ export const unitPriceHistory = [
   }
 ]
 
+export const operations = [
+  {
+    item_id: 4,
+    quantity: 1,
+    sendee_entity_id: 6,
+    sendee_franchise_id: 1,
+    shipped_at: 1775001600,
+    arrived_at: 1775347200
+  },
+  {
+    item_id: 4,
+    quantity: 1,
+    sendee_entity_id: 6,
+    sendee_franchise_id: 1,
+    shipped_at: 1775001600,
+    arrived_at: 1775347200
+  },
+  {
+    item_id: 7,
+    quantity: 4,
+    shipped_at: null,
+    arrived_at: 1770249600
+  },
+  {
+    item_id: 7,
+    quantity: 1,
+    addressee_entity_id: 7,
+    addressee_franchise_id: 1,
+    shipped_at: 1770681600,
+    arrived_at: 1770768000
+  }
+]
