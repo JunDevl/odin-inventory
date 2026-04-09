@@ -4,6 +4,8 @@ import { insertNewUser, retrieveUser } from "../models/db.ts";
 import { errorHandler, PromiseError } from "@app/utils";
 
 export const createUser: RequestHandler = async (req, res) => {
+  const initData = !!req.query['init'];
+
   const { username, email, password } = req.body;
 
   const hashedPassword = await argon2.hash(password, {
@@ -12,7 +14,7 @@ export const createUser: RequestHandler = async (req, res) => {
     timeCost: 5
   })
 
-  const createdUser = await errorHandler(insertNewUser(username, email, hashedPassword));
+  const createdUser = await errorHandler(insertNewUser(username, email, hashedPassword, initData));
 
   if (createdUser instanceof PromiseError) {
     res.statusCode = 500
