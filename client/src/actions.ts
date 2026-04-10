@@ -10,14 +10,14 @@ export const validateUser = async (email: string, password: string) => {
   return userUUID;
 }
 
-export const createNewUser = async (username: string, email: string, password: string, exampleData?: boolean) => {
+export const createNewUser = async (username: string, email: string, password: string, initData?: boolean) => {
   const headers: HeadersInit = {
     'content-type': "application/json"
   }
-  const body = JSON.stringify({ username, email, password })
+  const body = JSON.stringify({ username, email, password, initData })
 
   const postUser = await fetch(
-    `${import.meta.env["VITE_API_URI"]!}/users`, 
+    `${import.meta.env["VITE_API_URI"]!}/users`,
     { 
       method: "POST", 
       headers, 

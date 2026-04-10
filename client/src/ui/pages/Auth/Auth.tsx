@@ -20,7 +20,7 @@ const Auth = (props: AuthProps) => {
 
     const email = formData.get("email") as string;
     const pass = formData.get("password") as string;
-    const example = !!formData.get("example");
+    const init = !!formData.get("init");
 
     let generatedUUID: Promise<any> | null = null;
 
@@ -29,7 +29,7 @@ const Auth = (props: AuthProps) => {
     if (form.current?.method === "post") {
       const name = formData.get("username") as string;
 
-      generatedUUID = createNewUser(name, email, pass, example);
+      generatedUUID = createNewUser(name, email, pass, init);
     }
 
     generatedUUID?.then(res => {
@@ -102,9 +102,9 @@ const Auth = (props: AuthProps) => {
                 <input type="password" id="password" name="password" autoComplete="current-password" required/>
               </div>
 
-              <div className="check example">
+              <div className="check init">
                 <label htmlFor="boilerplate">Start with example data</label>
-                <input type="checkbox" name="example" id="example" />
+                <input type="checkbox" name="init" id="init" />
               </div>
 
               <button type="submit">

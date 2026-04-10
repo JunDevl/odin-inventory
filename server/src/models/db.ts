@@ -34,9 +34,21 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
   if (created instanceof PromiseError) throw new Error(created.error);
 
   if (initUserData) {
-    const uniqueEntities = Array.from(new Map(entityFranchises.map(entityFranchise => [entityFranchise.name, entityFranchise]))).map(item => item[1]);
+    const [row] = created;
+    const {id} = row!;
 
-    const entities = await sql`INSERT INTO entities ${sql(uniqueEntities, 'name', 'trade')} RETURNING entities`
+    const uniqueEntities = 
+      Array.from(
+        new Map(
+          entityFranchises.map(entityFranchise => 
+            [entityFranchise.name, 
+            ({...entityFranchise, trade: entityFranchise.trade ?? null, user_id: id})]
+          )
+        )
+      )
+      .map(item => item[1]);
+
+    const entities = await sql`INSERT INTO entities ${sql(uniqueEntities, 'user_id', 'name', 'trade')} RETURNING entities`
 
     let franchisesWithEntityID: Record<string, any>[] = [];
     entities.forEach(entity => {
@@ -49,15 +61,22 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
 
     await sql`INSERT INTO entities_franchises ${sql(franchisesWithEntityID)}`;
 
-    await sql`INSERT INTO item_categories ${sql(itemCategories)}`;
+    await sql`INSERT INTO item_categories ${sql({...itemCategories, user_id: id})}`;
 
-    await sql`INSERT INTO item_units ${sql(itemUnits)}`;
+    await sql`INSERT INTO item_units ${sql({...itemUnits, user_id: id})}`;
 
-    await sql`INSERT INTO items ${sql(items)}`;
+    await sql`INSERT INTO items ${sql({...items, user_id: id})}`;
 
-    await sql`INSERT INTO items_unit_price_history ${sql(unitPriceHistory)}`;
+    await sql`INSERT INTO items_unit_price_history ${sql({...unitPriceHistory, user_id: id, unit_user_id: id, })}`;
 
-    await sql`INSERT INTO operations ${sql(operations)}`;
+    await sql`INSERT INTO operations ${sql(
+      {...operations, 
+        user_id: id,
+        item_user_id: id,
+        unit_price_user_id: id,
+        addressee_user_id: id,
+        sendee_user_id: id
+      })}`;
 
   }
 

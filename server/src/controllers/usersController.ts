@@ -4,9 +4,7 @@ import { insertNewUser, retrieveUser } from "../models/db.ts";
 import { errorHandler, PromiseError } from "@app/utils";
 
 export const createUser: RequestHandler = async (req, res) => {
-  const initData = !!req.query['init'];
-
-  const { username, email, password } = req.body;
+  const { username, email, password, initData } = req.body;
 
   const hashedPassword = await argon2.hash(password, {
     memoryCost: 65536,
