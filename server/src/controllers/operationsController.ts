@@ -9,9 +9,8 @@ export const getAllOperations: RequestHandler = async (req, res) => {
   const operations = await errorHandler(retrieveAllUserOperation(id));
 
   if (operations instanceof PromiseError) {
-    res.statusCode = 404;
-    res.send(operations.error);
-    return;
+    res.status(404)
+    throw new Error(operations.error);
   }
 
   return operations;

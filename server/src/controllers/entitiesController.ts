@@ -9,9 +9,8 @@ export const getAllEntities: RequestHandler = async (req, res) => {
   const entitiesFranchises = await errorHandler(retrieveAllUserEntityFranchises(id));
 
   if (entitiesFranchises instanceof PromiseError) {
-    res.statusCode = 404;
-    res.send(entitiesFranchises.error);
-    return;
+    res.status(404);
+    throw new Error(entitiesFranchises.error);
   }
 
   return entitiesFranchises;

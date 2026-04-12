@@ -15,9 +15,8 @@ export const createUser: RequestHandler = async (req, res) => {
   const createdUser = await errorHandler(insertNewUser(username, email, hashedPassword, initData));
 
   if (createdUser instanceof PromiseError) {
-    res.statusCode = 500
-    res.send(createdUser.error);
-    return;
+    res.status(500)
+    throw new Error(createdUser.error);
   }
 
   const [row] = createdUser;
@@ -31,17 +30,19 @@ export const authenticateUser: RequestHandler = async (req, res) => {
   const pass = req.query.pass as string;
 
   if (!email || !pass) {
-    res.statusCode = 400;
-    res.send("Invalid query parameters.");
-    return;
+    res.status(400);
+    if (!email) throw new Error(`Invalid query parameters, ${
+      !email && pass ? "no e-mail provided." :
+      !pass && email ? "no password provided." :
+      "no arguments provided at all."}`)
+    throw new Error("Invalid query parameters.");
   }
 
   const dbRecord = await errorHandler(retrieveUser(email));
 
   if (dbRecord instanceof PromiseError) {
-    res.statusCode = 404;
-    res.send(dbRecord.error);
-    return;
+    res.status(404);
+    throw new Error(dbRecord.error);
   }
 
   const [row] = dbRecord;

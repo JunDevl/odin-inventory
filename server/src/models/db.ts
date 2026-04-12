@@ -5,7 +5,7 @@ config();
 import postgres from "postgres";
 import { errorHandler, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
-import { entityFranchises, itemCategories, items, itemUnits, unitPriceHistory, operations} from "./newUserData.ts";
+import { entityFranchises, itemCategories, items, itemUnits, unitPriceHistory, operations, categoriesOfItems} from "./newUserData.ts";
 import entitiesRouter from "../routes/entitiesRouter.ts";
 
 type EntityType = "service_provider" | "supplier" | "client";
@@ -48,36 +48,124 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
       )
       .map(item => item[1]);
 
-    const entities = await sql`INSERT INTO entities ${sql(uniqueEntities, 'user_id', 'name', 'trade')} RETURNING entities`
+    await sql`INSERT INTO entities ${sql(uniqueEntities, 'user_id', 'name', 'trade')}`
 
     let franchisesWithEntityID: Record<string, any>[] = [];
-    entities.forEach(entity => {
+
+    for (const entity of uniqueEntities) {
       const franchise = entityFranchises
         .filter(entityFranchise => entityFranchise.name === entity.name)
-        .map(entityFranchise => ({...entityFranchises, entity_id: entity.id}));
+        .map(entityFranchise => ({
+          ...entityFranchise, 
+          entity_user_id: id, 
+          franchise_user_id: id, 
+          entity_name: entityFranchise.name, 
+          franchise_entity_name: 
+          entityFranchise.name,
+          franchise_address: entityFranchise.address
+        }));
 
-      franchisesWithEntityID.push(franchise);
-    });
+      franchisesWithEntityID.push(...franchise);
+    }
 
-    await sql`INSERT INTO entities_franchises ${sql(franchisesWithEntityID)}`;
+    await sql`INSERT INTO entities_franchises ${sql(franchisesWithEntityID, 'entity_user_id', 'entity_name', 'address')}`;
 
-    await sql`INSERT INTO item_categories ${sql({...itemCategories, user_id: id})}`;
+    await sql`INSERT INTO outsourced_entity_franchise_types ${
+      sql(
+        franchisesWithEntityID, 
+        "franchise_user_id", 
+        "entity_name", 
+        "franchise_address", 
+        "type"
+      )}`;
 
-    await sql`INSERT INTO item_units ${sql({...itemUnits, user_id: id})}`;
+    await sql`INSERT INTO items ${
+      sql(items.map(item => ({...item, user_id: id})))
+    }`;
 
-    await sql`INSERT INTO items ${sql({...items, user_id: id})}`;
+    await sql`INSERT INTO item_categories ${
+      sql(itemCategories.map(category => ({...category, user_id: id})))
+    }`;
 
-    await sql`INSERT INTO items_unit_price_history ${sql({...unitPriceHistory, user_id: id, unit_user_id: id, })}`;
+    await sql`INSERT INTO categories_of_items ${
+      sql(categoriesOfItems.map(categoryOfItem => (
+        {...categoryOfItem, item_user_id: id, category_user_id: id}
+      )))
+    }`
 
-    await sql`INSERT INTO operations ${sql(
-      {...operations, 
+    await sql`INSERT INTO item_units ${
+      sql(itemUnits.map(unit => ({...unit, user_id: id})))
+    }`;
+
+
+    await sql`INSERT INTO items_unit_price_history ${
+      sql(unitPriceHistory.map(history => ({
+        ...history, 
+        item_user_id: id, 
+        unit_user_id: id
+      })))
+    }`;
+
+    const operationsWithUnitPricesID: Record<string, any>[] = [];
+    
+    for (const operation of operations) {
+      const latestPrice = await sql`
+        SELECT MAX(history_id) FROM items_unit_price_history
+        WHERE item_name = ${operation.item_name}
+        ${
+          operation.shipped_at ? sql`AND priced_at <= ${operation.shipped_at}` :
+          operation.arrived_at ? sql`AND priced_at <= ${operation.arrived_at}` :
+          sql``
+        }
+      `
+
+      const [row] = latestPrice;
+      const {max: unitPriceID} = row!
+
+      let addressee;
+      let sendee;
+
+      if (!operation.addressee_entity_name) {
+        const userEntityFranchise = await sql`
+          SELECT * FROM entities_franchises
+          WHERE entity_user_id = ${id}
+          AND entity_name = ${username}
+        `;
+
+        const [row] = userEntityFranchise;
+
+        addressee = {name: row!.entity_name, address: row!.address};
+      } else addressee = {name: operation.addressee_entity_name, address: operation.addressee_franchise_address};
+
+      if (!operation.sendee_entity_name) {
+        const userEntityFranchise = await sql`
+          SELECT * FROM entities_franchises
+          WHERE entity_user_id = ${id}
+          AND entity_name = ${username}
+        `;
+
+        const [row] = userEntityFranchise;
+
+        sendee = {name: row!.entity_name, address: row!.address};
+      } else sendee = {name: operation.sendee_entity_name, address: operation.sendee_franchise_address};
+
+      operationsWithUnitPricesID.push({
+        ...operation, 
         user_id: id,
         item_user_id: id,
         unit_price_user_id: id,
+        unit_price_item_name: operation.item_name,
+        unit_price_id: unitPriceID,
         addressee_user_id: id,
-        sendee_user_id: id
-      })}`;
+        addressee_entity_name: addressee.name,
+        addressee_franchise_address: addressee.address, 
+        sendee_user_id: id,
+        sendee_entity_name: sendee.name,
+        sendee_franchise_address: sendee.address
+      })
+    }
 
+    await sql`INSERT INTO operations ${sql(operationsWithUnitPricesID)}`;
   }
 
   return created;

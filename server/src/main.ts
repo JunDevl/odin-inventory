@@ -35,4 +35,9 @@ apiRouter.use("/operations", operationsRouter);
 apiRouter.use("/entities", entitiesRouter);
 apiRouter.use("/items", itemsRouter);
 
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error(err.stack);
+  res.send(err.message);
+})
+
 app.listen(PORT, (err) => err ? console.log(err) : console.log(`Listening on port ${PORT}\n`));

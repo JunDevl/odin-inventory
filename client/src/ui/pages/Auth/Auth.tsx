@@ -103,8 +103,8 @@ const Auth = (props: AuthProps) => {
               </div>
 
               <div className="check init">
-                <label htmlFor="boilerplate">Start with example data</label>
-                <input type="checkbox" name="init" id="init" />
+                <label htmlFor="init">Start with example data</label>
+                <input type="checkbox" name="init" id="init" value="true" checked/>
               </div>
 
               <button type="submit">

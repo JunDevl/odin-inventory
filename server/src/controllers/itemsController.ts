@@ -9,9 +9,8 @@ export const getAllItemCategories: RequestHandler = async (req, res) => {
   const categories = await errorHandler(retrieveAllUserItemCategories(id));
 
   if (categories instanceof PromiseError) {
-    res.statusCode = 404;
-    res.send(categories.error);
-    return;
+    res.status(404);
+    throw new Error(categories.error);
   }
 
   return categories;
@@ -27,9 +26,8 @@ export const getAllAvaliableItems: RequestHandler = async (req, res) => {
   const items = await errorHandler(retrieveAllUserItems(id));
 
   if (items instanceof PromiseError) {
-    res.statusCode = 404;
-    res.send(items.error);
-    return;
+    res.status(404);
+    throw new Error(items.error);
   }
 
   return items;
