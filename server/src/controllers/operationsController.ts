@@ -18,7 +18,7 @@ export const getAllOperations: RequestHandler = async (req, res) => {
     throw new Error(operations.error);
   }
 
-  return operations;
+  res.json(operations);
 }
 
 export const getOperation: RequestHandler = async (req, res) => {

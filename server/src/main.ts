@@ -13,7 +13,7 @@ import itemsRouter from "./routes/itemsRouter.ts";
 import usersRouter from "./routes/usersRouter.ts";
 
 const apiRouter = Router();
-const dataRouter = Router();
+const dataRouter = Router({mergeParams: true});
 
 const __dirname = path.resolve();
 

@@ -315,25 +315,21 @@ export const insertUserOperation = async ({
 }
 
 const joinAllOperationsQuery = `
-  JOIN items ON CONCAT(user_id, name) = CONCAT(operations.user_id, operations_item_name)
-  JOIN items_unit_price_history ON CONCAT(user_id, unit_name, history_id) = CONCAT(operations.user_id, operations.unit_name, operations.history_id)
-  JOIN entities_franchises ON CONCAT(entity_user_id, entity_name, address) = CONCAT(operations.user_id, operations.addressee_entity_name, operations.addressee_franchise_address)
-  JOIN entities_franchises ON CONCAT(entity_user_id, entity_name, address) = CONCAT(operations.user_id, operations.sendee_entity_name, operations.sendee_franchise_address)
+  JOIN items ON CONCAT(items.user_id, name) = CONCAT(operations.user_id, operations.item_name)
+  JOIN items_unit_price_history ON CONCAT(items_unit_price_history.item_user_id, items_unit_price_history.item_name, history_id) = CONCAT(operations.user_id, operations.unit_price_item_name, operations.unit_price_id)
+  JOIN entities_franchises 
+    ON CONCAT(entity_user_id, entity_name, address) = CONCAT(operations.user_id, operations.addressee_entity_name, operations.addressee_franchise_address)
+    OR CONCAT(entity_user_id, entity_name, address) = CONCAT(operations.user_id, operations.sendee_entity_name, operations.sendee_franchise_address)
 `
 
 export const retrieveUserOperation = async (userUuid: UUID, operationId: number, joinAll?: boolean) => {
-  const sqlQuery = `
-    SELECT * FROM operations
-    WHERE user_id = ${userUuid}
-    AND operation_id = ${operationId}
-  `
-
-  const operation = await errorHandler(joinAll ?
+  const operation = await errorHandler(
     sql`
-      ${sqlQuery}
-      ${joinAllOperationsQuery}
-    ` : 
-    sql`${sqlQuery}`
+      SELECT * FROM operations
+      ${joinAll ? joinAllOperationsQuery : ""}
+      WHERE user_id = ${userUuid}
+      AND operation_id = ${operationId}
+    `
   )
 
   if (operation instanceof PromiseError) throw new Error(operation.error);
@@ -342,18 +338,14 @@ export const retrieveUserOperation = async (userUuid: UUID, operationId: number,
 }
 
 export const retrieveAllUserOperation = async (userUuid: UUID, joinAll?: boolean) => {
-  const sqlQuery = `
+  const operations = await errorHandler(joinAll ? sql`
     SELECT * FROM operations
-    WHERE user_id = ${userUuid}
-  `;
-
-  const operations = await errorHandler(joinAll ?
-    sql`
-      ${sqlQuery}
-      ${joinAllOperationsQuery}
-    ` :
-    sql`${sqlQuery}`
-  )
+    ${joinAllOperationsQuery}
+    WHERE operations.user_id = ${userUuid}
+  ` : sql`
+    SELECT * FROM operations
+    WHERE operations.user_id = ${userUuid}
+  `)
 
   if (operations instanceof PromiseError) throw new Error(operations.error);
 

@@ -7,7 +7,7 @@ const __dirname = path.resolve();
  
 const assetsPath = path.join(__dirname, "public");
 
-const itemsRouter = Router();
+const itemsRouter = Router({mergeParams: true});
 
 itemsRouter.use(express.static(assetsPath));
 
