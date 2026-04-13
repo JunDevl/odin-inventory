@@ -1,3 +1,5 @@
+import type { UUID } from "crypto";
+
 type Data = "stocks" | "operations" | "storages" | "entities" | "avaliable_items" | "item_categories"
 
 export const validateUser = async (email: string, password: string) => {
@@ -17,7 +19,7 @@ export const createNewUser = async (username: string, email: string, password: s
   const body = JSON.stringify({ username, email, password, initData })
 
   const postUser = await fetch(
-    `${import.meta.env["VITE_API_URI"]!}/users`,
+    `${import.meta.env["VITE_API_URI"]!}`,
     { 
       method: "POST", 
       headers, 
@@ -34,14 +36,16 @@ export const createNewUser = async (username: string, email: string, password: s
   return createdUserUUID;
 }
 
-export const fetchAll = async (dataName: Data) => {
+export const fetchAll = async (userID: UUID, dataName: Data) => {
   let data: Response;
   let res: any[];
 
+  console.log(`${import.meta.env["VITE_API_URI"]!}/${userID}/${dataName}`);
+
   if (dataName !== "avaliable_items" || dataName !== "avaliable_items") {
-    data = await fetch(`${import.meta.env["VITE_API_URI"]!}/${dataName}`);
+    data = await fetch(`${import.meta.env["VITE_API_URI"]!}/${userID}/${dataName}`);
   } else {
-    data = await fetch(`${import.meta.env["VITE_API_URI"]!}/items/${dataName === "avaliable_items" ? "avaliable" : "categories"}`);
+    data = await fetch(`${import.meta.env["VITE_API_URI"]!}/items/${userID}/${dataName === "avaliable_items" ? "avaliable" : "categories"}`);
   }
 
   if (!data.ok) {

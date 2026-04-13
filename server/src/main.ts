@@ -13,6 +13,7 @@ import itemsRouter from "./routes/itemsRouter.ts";
 import usersRouter from "./routes/usersRouter.ts";
 
 const apiRouter = Router();
+const dataRouter = Router();
 
 const __dirname = path.resolve();
 
@@ -29,11 +30,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api", apiRouter);
 
 apiRouter.use("/users", usersRouter);
+apiRouter.use("/:userID", dataRouter);
 
-apiRouter.use("/stocks", stocksRouter);
-apiRouter.use("/operations", operationsRouter);
-apiRouter.use("/entities", entitiesRouter);
-apiRouter.use("/items", itemsRouter);
+dataRouter.use("/stocks", stocksRouter);
+dataRouter.use("/operations", operationsRouter);
+dataRouter.use("/entities", entitiesRouter);
+dataRouter.use("/items", itemsRouter);
 
 app.use((err: any, req: any, res: any, next: any) => {
   console.error(err.stack);

@@ -79,25 +79,35 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
         "type"
       )}`;
 
-    await sql`INSERT INTO items ${
+    const createUserExampleItems = 
+    sql`INSERT INTO items ${
       sql(items.map(item => ({...item, user_id: id})))
     }`;
 
-    await sql`INSERT INTO item_categories ${
+    const createUserExampleItemCategories = 
+    sql`INSERT INTO item_categories ${
       sql(itemCategories.map(category => ({...category, user_id: id})))
     }`;
 
-    await sql`INSERT INTO categories_of_items ${
-      sql(categoriesOfItems.map(categoryOfItem => (
-        {...categoryOfItem, item_user_id: id, category_user_id: id}
-      )))
-    }`
-
-    await sql`INSERT INTO item_units ${
+    const createUserExampleItemUnits = 
+    sql`INSERT INTO item_units ${
       sql(itemUnits.map(unit => ({...unit, user_id: id})))
     }`;
 
+    await Promise.all([
+      createUserExampleItems,
+      createUserExampleItemCategories,
+      createUserExampleItemUnits
+    ])
 
+    const addCategoryToExampleItems =
+    sql`INSERT INTO categories_of_items ${
+      sql(categoriesOfItems.map(categoryOfItem => (
+        {...categoryOfItem, item_user_id: id, category_user_id: id}
+      )))
+    }`;
+
+    const addPriceHistoryToExampleItems =
     await sql`INSERT INTO items_unit_price_history ${
       sql(unitPriceHistory.map(history => ({
         ...history, 
@@ -105,6 +115,11 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
         unit_user_id: id
       })))
     }`;
+
+    await Promise.all([
+      addCategoryToExampleItems,
+      addPriceHistoryToExampleItems
+    ])
 
     const operationsWithUnitPricesID: Record<string, any>[] = [];
     
@@ -300,10 +315,10 @@ export const insertUserOperation = async ({
 }
 
 const joinAllOperationsQuery = `
-  JOIN items ON CONCAT(items.user_id, items.item_id) = CONCAT(operations.user_id, operations_item_id)
-  JOIN items_unit_price_history ON CONCAT(items_unit_price_history.user_id, items_unit_price_history.unit_id, items_unit_price_history.history_id) = CONCAT(operations.user_id, operations.unit_id, operations.history_id)
-  JOIN entities_franchises ON CONCAT(addressee.user_id, addressee.entity_id, addressee.franchise_id) = CONCAT(operations.user_id, operations.entity_id, operations.franchise_id)
-  JOIN entities_franchises ON CONCAT(sendee.user_id, sendee.entity_id, sendee.franchise_id) = CONCAT(operations.user_id, operations.entity_id, operations.franchise_id)
+  JOIN items ON CONCAT(user_id, name) = CONCAT(operations.user_id, operations_item_name)
+  JOIN items_unit_price_history ON CONCAT(user_id, unit_name, history_id) = CONCAT(operations.user_id, operations.unit_name, operations.history_id)
+  JOIN entities_franchises ON CONCAT(entity_user_id, entity_name, address) = CONCAT(operations.user_id, operations.addressee_entity_name, operations.addressee_franchise_address)
+  JOIN entities_franchises ON CONCAT(entity_user_id, entity_name, address) = CONCAT(operations.user_id, operations.sendee_entity_name, operations.sendee_franchise_address)
 `
 
 export const retrieveUserOperation = async (userUuid: UUID, operationId: number, joinAll?: boolean) => {
@@ -357,7 +372,7 @@ export const insertUserItem = async (userUuid: UUID, name: string, description?:
 }
 
 const joinItemCategoryQuery = `
-  JOIN categories_of_items ON CONCAT(categories_of_items.item_user_id, categories_of_items.item_id) = CONCAT(items.user_id, items.item_id)
+  JOIN categories_of_items ON CONCAT(item_user_id, item_name) = CONCAT(items.user_id, items.item_name)
 `
 
 export const retrieveUserItem = async (userUuid: UUID, itemId: number, joinCategory?: boolean) => {
@@ -470,15 +485,15 @@ export const insertUserEntityFranchise = async (userUuid: UUID, name: string, ad
 
 const joinFranchiseOfType = `
     JOIN outsourced_entity_franchise_types
-    ON CONCAT(entities_franchises.user_id, entities_franchises.entity_id, entities_franchises.franchise_id) = (entities_franchises.user_id, entities_franchises.entity_id, entities_franchises.franchise_id)
+    ON CONCAT(franchise_user_id, franchise_entity_name, franchise_address) = (entities_franchises.entity_user_id, entities_franchises.entity_name, entities_franchises.address)
   `
 
-export const retrieveUserEntityFranchise = async (userUuid: UUID, entityId: number, franchiseId: number, joinType?: boolean) => {
+export const retrieveUserEntityFranchise = async (userUuid: UUID, entityId: number, franchiseAddress: string, joinType?: boolean) => {
   const sqlQuery = `
     SELECT * FROM entities
     WHERE user_id = ${userUuid}
     AND entity_id = ${entityId}
-    JOIN entities_franchises ON CONCAT(entities_franchises.user_id, entities_franchises.entity_id, entities_franchises.franchise_id) = CONCAT(entities.user_id, entities.entity_id, ${franchiseId})
+    JOIN entities_franchises ON CONCAT(entity_user_id, entity_name, address) = CONCAT(entities.user_id, entities.entity_name, ${franchiseAddress})
   `
 
   const entityFranchise = await errorHandler(joinType ?
@@ -494,15 +509,11 @@ export const retrieveUserEntityFranchise = async (userUuid: UUID, entityId: numb
   return entityFranchise;
 }
 
-const joinFranchiseTypeQuery = `
-
-`
-
 export const retrieveAllUserEntityFranchises = async (userUuid: UUID, joinType?: boolean) => {
   const sqlQuery = sql`
     SELECT * FROM entities
     WHERE user_id = ${userUuid}
-    JOIN entities_franchises ON CONCAT(entities_franchises.user_id, entities_franchises.entity_id) = CONCAT(entities.user_id, entities.entity_id)
+    JOIN entities_franchises ON CONCAT(entity_user_id, entity_name) = CONCAT(entities.user_id, entities.name)
   `
 
   const entitiesFranchises = await errorHandler(joinType ? 
@@ -535,7 +546,7 @@ export const retrieveAllUserEntityFranchisesOfType = async (userUuid: UUID, type
   const entitiesFranchises = await errorHandler(sql`
     SELECT * FROM entities_franchises
     JOIN ${sql(tableName)} 
-    ON CONCAT(${sql(tableName)}.user_id, ${sql(tableName)}.entity_id, ${sql(tableName)}.franchise_id) = CONCAT(${userUuid}, entities_franchises.entity_id, entities_franchises.franchise_id)
+    ON CONCAT(user_id, entity_name, franchise_address) = CONCAT(${userUuid}, entities_franchises.entity_name, entities_franchises.address)
     WHERE ${sql(tableName)}.type = ${type}
   `)
 

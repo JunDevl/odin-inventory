@@ -4,7 +4,12 @@ import { errorHandler, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
 
 export const getAllOperations: RequestHandler = async (req, res) => {
-  const id = req.query.userId as UUID;
+  const id = req.params.userID as UUID;
+
+  if (!id) {
+    res.status(400)
+    throw new Error("No user id provided.");
+  }
 
   const operations = await errorHandler(retrieveAllUserOperation(id));
 

@@ -4,6 +4,6 @@ import { getAllItemStocks, getItemStock } from "../controllers/stockController.t
 const stocksRouter = Router();
 
 stocksRouter.get("/", getAllItemStocks);
-stocksRouter.get("/:itemID", getItemStock);
+stocksRouter.get("/:itemName", getItemStock);
 
 export default stocksRouter;

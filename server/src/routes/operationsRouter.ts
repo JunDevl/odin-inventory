@@ -4,6 +4,6 @@ import { getAllOperations, getOperation } from "../controllers/operationsControl
 const operationsRouter = Router();
 
 operationsRouter.get("/", getAllOperations);
-operationsRouter.get("/:operationID", getOperation);
+operationsRouter.get("/:operationName", getOperation);
 
 export default operationsRouter;

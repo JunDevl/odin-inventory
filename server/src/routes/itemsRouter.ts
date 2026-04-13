@@ -12,9 +12,9 @@ const itemsRouter = Router();
 itemsRouter.use(express.static(assetsPath));
 
 itemsRouter.get("/avaliable", getAllAvaliableItems);
-itemsRouter.get("/avaliable/itemID", getAvaliableItem);
+itemsRouter.get("/avaliable/:itemName", getAvaliableItem);
 
 itemsRouter.get("/categories", getAllItemCategories);
-itemsRouter.get("/categories/categoryID", getItemCategory);
+itemsRouter.get("/categories/:categoryName", getItemCategory);
 
 export default itemsRouter;
