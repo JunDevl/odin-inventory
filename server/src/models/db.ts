@@ -8,6 +8,8 @@ import type { UUID } from "node:crypto";
 import { entityFranchises, itemCategories, items, itemUnits, unitPriceHistory, operations, categoriesOfItems} from "./newUserData.ts";
 import entitiesRouter from "../routes/entitiesRouter.ts";
 
+
+
 type EntityType = "service_provider" | "supplier" | "client";
 
 const sql = postgres(`

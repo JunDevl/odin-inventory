@@ -19,7 +19,7 @@ export const createNewUser = async (username: string, email: string, password: s
   const body = JSON.stringify({ username, email, password, initData })
 
   const postUser = await fetch(
-    `${import.meta.env["VITE_API_URI"]!}`,
+    `${import.meta.env["VITE_API_URI"]!}/users`,
     { 
       method: "POST", 
       headers, 
@@ -38,7 +38,7 @@ export const createNewUser = async (username: string, email: string, password: s
 
 export const fetchAll = async (userID: UUID, dataName: Data) => {
   let data: Response;
-  let res: any[];
+  let res: Record<string, any>[];
 
   console.log(`${import.meta.env["VITE_API_URI"]!}/${userID}/${dataName}`);
 
@@ -54,6 +54,13 @@ export const fetchAll = async (userID: UUID, dataName: Data) => {
   }
 
   res = await data.json();
+
+  for (const item of res) {
+    for (const k of Object.keys(item)) {
+      if (typeof item[k] !== "string" || !k.includes("date") && !k.includes("datetime") && !k.includes("at")) continue;
+      item[k] = new Date(item[k])
+    }
+  }
 
   return res;
 }

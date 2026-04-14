@@ -29,6 +29,9 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
           <table title={title} {...props}>
             <thead>
               <tr>
+                <th scope="col">
+                  <input type="checkbox" name="all" id="all" />
+                </th>
                 {Object.keys(dataArray[0]).map(item => 
                   <th scope="col">
                     {item}
@@ -37,10 +40,13 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
               </tr>
             </thead>
             <tbody>
-              {dataArray.map(item =>
+              {dataArray.map((item, index) =>
                 <tr>
+                  <th scope="row">
+                    <input type="checkbox" name="select" id={`row${index+1}`} />
+                  </th>
                   {Object.values(item).map(value =>
-                    <td>{value}</td>
+                    <td>{value instanceof Date ? value.toLocaleString() : value}</td>
                   )}
                 </tr>
               )}

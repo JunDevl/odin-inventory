@@ -38,6 +38,7 @@ h1 {
 table {
   --border-radius: 1.5rem;
   border-spacing: 0;
+  font-size: 0.8rem;
 
   & th,
   & td {
@@ -47,6 +48,7 @@ table {
   }
 
   &>thead {
+    font-size: 0.9rem;
     border-radius: 0 var(--border-radius);
     background-color: var(--dark-3);
 

@@ -180,31 +180,31 @@ export const unitPriceHistory = [
     item_name: "Glock G17",
     unit_name: "unit",
     price_cents: 55000,
-    priced_at: 1759000000
+    priced_at: "2025-09-27"
   },
   {
     item_name: "Apple",
     unit_name: "kg",
     price_cents: 75,
-    priced_at: 1760000000
+    priced_at: "2025-10-09"
   },
   {
     item_name: "Apple",
     unit_name: "kg",
     price_cents: 80,
-    priced_at: 1765000000
+    priced_at: "2025-12-06"
   },
   {
     item_name: "Nordstage 4",
     unit_name: "unit",
     price_cents: 599900,
-    priced_at: 1767225600
+    priced_at: "2026-01-01 12:00"
   },
   {
     item_name: "Apple",
     unit_name: "kg",
     price_cents: 90,
-    priced_at: 1770000000
+    priced_at: "2026-02-02 13:40"
   }
 ]
 
@@ -216,8 +216,8 @@ export const operations = [
     addressee_franchise_address: null,
     sendee_entity_name: "Nord Keyboards",
     sendee_franchise_address: "Clavia Digital Musical Instruments AB, BOX 4214, SE-102 65 Stockholm, Sweden",
-    shipped_at: 1775001600,
-    arrived_at: 1775347200
+    shipped_at: "2026-04-01",
+    arrived_at: "2026-04-05"
   },
   {
     item_name: "Nordstage 4",
@@ -226,8 +226,8 @@ export const operations = [
     addressee_franchise_address: null,
     sendee_entity_name: "Nord Keyboards",
     sendee_franchise_address: "Clavia Digital Musical Instruments AB, BOX 4214, SE-102 65 Stockholm, Sweden",
-    shipped_at: 1775001600,
-    arrived_at: 1775347200
+    shipped_at: "2026-04-02",
+    arrived_at: "2026-04-06"
   },
   {
     item_name: "Glock G17",
@@ -237,7 +237,7 @@ export const operations = [
     sendee_entity_name: null,
     sendee_franchise_address: null,
     shipped_at: null,
-    arrived_at: 1770249600
+    arrived_at: "2026-02-05"
   },
   {
     item_name: "Glock G17",
@@ -246,7 +246,7 @@ export const operations = [
     addressee_franchise_address: "Mark's house, Canada",
     sendee_entity_name: null,
     sendee_franchise_address: null,
-    shipped_at: 1770681600,
-    arrived_at: 1770768000
+    shipped_at: "2026-02-10 17:00",
+    arrived_at: "2026-02-11 18:00"
   }
 ]
