@@ -1,36 +1,25 @@
-import type { title } from "process";
 import Table from "../../components/Table/Table"
-import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAll } from "../../../actions";
-
-const Bouba = [
-  {
-    name: "brand",
-    age: 15
-  },
-  {
-    name: "luke",
-    age: 16
-  }
-]
+import type { UUID } from "crypto";
 
 type EntitiesProps = {}
 
 const Entities = (props: EntitiesProps) => {
   const {status, error, data: entities} = useQuery({
     queryKey: ["entities"],
-    queryFn: () => fetchAll("entities")
+    queryFn: () => fetchAll(localStorage.getItem("userUUID")! as UUID, "entities")
   })
 
-  if (status) return <p>Loading...</p>
+  if (status === "pending") return <p>Loading...</p>
 
   if (error) return <p>Error</p>
 
   return (
-    <Table dataArray={entities} title="Entities">
-
-    </Table>
+    <>
+      <Table title="Entities" dataArray={entities}>
+      </Table>
+    </>
   )
 }
 export default Entities

@@ -42,11 +42,10 @@ export const fetchAll = async (userID: UUID, dataName: Data) => {
 
   console.log(`${import.meta.env["VITE_API_URI"]!}/${userID}/${dataName}`);
 
-  if (dataName !== "avaliable_items" || dataName !== "avaliable_items") {
+  if (dataName === "item_categories" || dataName === "avaliable_items") 
+    data = await fetch(`${import.meta.env["VITE_API_URI"]!}/${userID}/items/${dataName === "avaliable_items" ? "avaliable" : "categories"}`);
+  else 
     data = await fetch(`${import.meta.env["VITE_API_URI"]!}/${userID}/${dataName}`);
-  } else {
-    data = await fetch(`${import.meta.env["VITE_API_URI"]!}/items/${userID}/${dataName === "avaliable_items" ? "avaliable" : "categories"}`);
-  }
 
   if (!data.ok) {
     if (data.status === 404) return [];

@@ -1,8 +1,25 @@
+import { useQuery } from "@tanstack/react-query";
+import { fetchAll } from "../../../actions";
+import Table from "../../components/Table/Table";
+import type { UUID } from "crypto";
+
 type ItemsProps = {}
 
 const AvaliableItems = (props: ItemsProps) => {
+  const {status, error, data: items} = useQuery({
+    queryKey: ["items"],
+    queryFn: () => fetchAll(localStorage.getItem("userUUID")! as UUID, "avaliable_items")
+  })
+
+  if (status === "pending") return <p>Loading...</p>
+
+  if (error) return <p>Error</p>
+
   return (
-    <div>AvaliableItems</div>
+    <>
+      <Table title="Avaliable Items" dataArray={items}>
+      </Table>
+    </>
   )
 }
 export default AvaliableItems

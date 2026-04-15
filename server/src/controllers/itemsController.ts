@@ -4,16 +4,21 @@ import { errorHandler, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
 
 export const getAllItemCategories: RequestHandler = async (req, res) => {
-  const id = req.query.userId as UUID;
+  const id = req.params.userID as UUID;
+    
+  if (!id) {
+    res.status(400)
+    throw new Error("No user id provided.");
+  }
 
   const categories = await errorHandler(retrieveAllUserItemCategories(id));
 
   if (categories instanceof PromiseError) {
-    res.status(404);
+    res.status(404)
     throw new Error(categories.error);
   }
 
-  return categories;
+  res.json(categories);
 }
 
 export const getItemCategory: RequestHandler = async (req, res) => {
@@ -21,16 +26,21 @@ export const getItemCategory: RequestHandler = async (req, res) => {
 }
 
 export const getAllAvaliableItems: RequestHandler = async (req, res) => {
-  const id = req.query.userId as UUID;
+  const id = req.params.userID as UUID;
+    
+  if (!id) {
+    res.status(400)
+    throw new Error("No user id provided.");
+  }
 
   const items = await errorHandler(retrieveAllUserItems(id));
 
   if (items instanceof PromiseError) {
-    res.status(404);
+    res.status(404)
     throw new Error(items.error);
   }
 
-  return items;
+  res.json(items);
 }
 
 export const getAvaliableItem: RequestHandler = async (req, res) => {

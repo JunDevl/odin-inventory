@@ -75,6 +75,24 @@ li {
   list-style: none;
 }
 
+input,
+button {
+  outline: none;
+  border: none;
+}
+
+button {
+  background-color: gray;
+}
+
+button:hover {
+  background-color: oklch(from gray calc(l*0.9) c h);
+}
+
+button:active {
+  background-color: oklch(from gray calc(l*0.8) c h);
+}
+
 #root>main:not(.user_auth) {
   padding: 2rem;
   border-radius: 2rem;

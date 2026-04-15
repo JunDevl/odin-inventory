@@ -4,16 +4,21 @@ import { errorHandler, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
 
 export const getAllEntities: RequestHandler = async (req, res) => {
-  const id = req.query.userId as UUID;
+  const id = req.params.userID as UUID;
   
-  const entitiesFranchises = await errorHandler(retrieveAllUserEntityFranchises(id));
-
-  if (entitiesFranchises instanceof PromiseError) {
-    res.status(404);
-    throw new Error(entitiesFranchises.error);
+  if (!id) {
+    res.status(400)
+    throw new Error("No user id provided.");
   }
 
-  return entitiesFranchises;
+  const entities = await errorHandler(retrieveAllUserEntityFranchises(id));
+
+  if (entities instanceof PromiseError) {
+    res.status(404)
+    throw new Error(entities.error);
+  }
+
+  res.json(entities);
 }
 
 export const getEntity: RequestHandler = async (req, res) => {

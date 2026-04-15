@@ -6,7 +6,6 @@ import express, { Router } from "express";
 import cors from "cors";
 import path from "path";
 
-import stocksRouter from "./routes/stocksRouter.ts";
 import operationsRouter from "./routes/operationsRouter.ts";
 import entitiesRouter from "./routes/entitiesRouter.ts";
 import itemsRouter from "./routes/itemsRouter.ts";
@@ -32,7 +31,6 @@ app.use("/api", apiRouter);
 apiRouter.use("/users", usersRouter);
 apiRouter.use("/:userID", dataRouter);
 
-dataRouter.use("/stocks", stocksRouter);
 dataRouter.use("/operations", operationsRouter);
 dataRouter.use("/entities", entitiesRouter);
 dataRouter.use("/items", itemsRouter);
