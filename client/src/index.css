@@ -26,7 +26,7 @@
 
   --semantic-error-color: oklch(55% 0.16 30);
 
-  font: 18px "Satoshi-Variable", sans-serif;
+  font: 14px "Satoshi-Variable", sans-serif;
   letter-spacing: 0.18px;
   font-weight: 400;
   line-height: 1.5;
@@ -39,10 +39,6 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -94,13 +90,13 @@ button:active {
 }
 
 #root>main:not(.user_auth) {
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 2rem;
   background-color: var(--dark-2);
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: scroll;
+  overflow: auto;
 }
 
 #root {

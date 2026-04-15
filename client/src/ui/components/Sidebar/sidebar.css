@@ -1,5 +1,5 @@
 .sidebar {
-  --li-padding: 1rem 3rem;
+  --li-padding: 1rem 2rem;
   --li-border-radius: 1rem;
   --color: var(--dark-3);
 
@@ -10,8 +10,8 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 0.5rem;
-  font-size: 1.25rem;
+  padding: 0.25rem;
+  font-size: 1.1rem;
 
   &>.top {
     flex: 1;
@@ -22,7 +22,7 @@
     flex-direction: column;
     justify-content: start;
     align-items: stretch;
-    gap: 0.5rem;
+    gap: 0.25rem;
 
     & li {
       box-sizing: border-box;
@@ -78,14 +78,14 @@
     anchor-name: --drop-down-title;
   }
 
-  &>:not(.title) {
+  &>.drop-items {
     padding: 0;
     border-radius: 0 var(--li-border-radius) var(--li-border-radius) 0;
     background-color: var(--color);
     position: absolute;
     position-anchor: --drop-down-title;
     position-area: right span-bottom;
-    outline: 0.5rem solid var(--color);
+    outline: 0.25rem solid var(--color);
     box-sizing: content-box;
     box-shadow: 10px 20px 30px -5px var(--darker);
     z-index: -1;
