@@ -1,4 +1,4 @@
-import { useRef, type ChangeEvent, type HTMLProps, type InputEvent } from "react";
+import { useRef, type ChangeEvent, type HTMLProps, type InputEvent, type MouseEvent } from "react";
 import "./table.css"
 
 type TableProps = {
@@ -11,7 +11,17 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
   const rowSelectors = useRef<HTMLInputElement[]>([]);
   const body = useRef<HTMLTableSectionElement>(null);
 
-  const selectAllItems = () => {
+  const selectAllItems = (e: ChangeEvent<HTMLInputElement, HTMLInputElement> | MouseEvent<HTMLTableHeaderCellElement | HTMLTableCellElement, globalThis.MouseEvent>) => {
+    e.stopPropagation();
+
+    const target = e.target as HTMLElement;
+
+    if (!target.matches("input")) {
+      const select = (target as HTMLTableHeaderCellElement | HTMLTableCellElement).firstChild as HTMLInputElement;
+
+      select.checked = select.checked ? false : true;
+    }
+
     rowSelectors.current.forEach(select => {
       select!.checked = select!.checked ? false : true;
 
@@ -21,10 +31,18 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
     })
   }
 
-  const selectItem = (e: ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
-    const target = e.target as HTMLInputElement;
+  const selectItem = (e: ChangeEvent<HTMLInputElement, HTMLInputElement> | MouseEvent<HTMLTableHeaderCellElement | HTMLTableCellElement, globalThis.MouseEvent>) => {
+    e.stopPropagation();
 
-    const row = target.closest("tr");
+    const target = e.target as HTMLElement;
+
+    if (!target.matches("input")) {
+      const select = (target as HTMLTableHeaderCellElement | HTMLTableCellElement).firstChild as HTMLInputElement;
+
+      select.checked = select.checked ? false : true;
+    }
+
+    const row = (e.target as HTMLInputElement).closest("tr");
 
     row!.toggleAttribute("selected");
   }
@@ -57,7 +75,7 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
           <table title={title} {...props}>
             <thead>
               <tr>
-                <th scope="col">
+                <th scope="col" onClickCapture={selectAllItems} className="selectable" >
                   <input 
                     type="checkbox"
                     name="all"   
@@ -76,13 +94,14 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
             <tbody ref={body}>
               {dataArray.map((item, index) =>
                 <tr id={`row${index+1}`} key={`row${index+1}`}>
-                  <th scope="row">
+                  <th scope="row" onClickCapture={selectItem} className="selectable">
                     <input 
                       ref={element => {rowSelectors.current[index] = element as HTMLInputElement}}
                       type="checkbox" 
-                      name="select" 
+                      name={`select${index}`}
+                      id={`select${index}`}
                       className="select"
-                      onChange={e => selectItem(e)}
+                      onChange={selectItem}
                     />
                   </th>
                   {Object.values(item).map((value, index) =>

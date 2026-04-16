@@ -24,20 +24,21 @@ svg {
   padding-inline: 1rem;
 
   &>.filter {
-    border: 1px solid white;
+    height: 3rem;
+    border: 2px solid white;
     border-radius: 100vw;
-    /* overflow: hidden; */
     flex: 1;
     display: flex;
 
     &>input {
-      font-size: 1.1rem;
+      font-size: 1.25rem;
       flex: 1;
-      padding-inline: 1rem;
+      padding-inline: 0.5rem;
+      background-color: inherit;
     }
 
     &>.expand {
-      width: 2.25rem;
+      width: 2.75rem;
       border: none;
       border-radius: 0px 100vh 100vh 0px;
     }
@@ -45,7 +46,7 @@ svg {
     &>.search_icon {
       padding-inline: 0.5rem;
       padding-block: 0.2rem;
-      width: 1.7rem;
+      width: 2rem;
     }
   }
 
@@ -58,7 +59,12 @@ svg {
 table {
   --border-radius: 1.5rem;
   border-spacing: 0;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+
+  & input[type="checkbox"] {
+    height: 1.5rem;
+    width: 1.5rem;
+  }
 
   & th,
   & td {
@@ -83,7 +89,6 @@ table {
 
   &>tbody {
     background-color: var(--dark-3);
-
   }
 
   &:not(:has(tfoot))>tbody {
