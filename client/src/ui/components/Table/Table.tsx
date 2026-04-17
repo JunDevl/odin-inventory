@@ -1,5 +1,6 @@
 import { useRef, type ChangeEvent, type HTMLProps, type InputEvent, type MouseEvent } from "react";
 import "./table.css"
+import Checkbox from "../Checkbox/Checkbox";
 
 type TableProps = {
   dataArray: Record<string, any>[],
@@ -49,6 +50,7 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
 
   return (
     <>
+      <Checkbox name="test" id="test" className="test"/>
       <h1>{title}</h1>
       <div className="table">
         <div className="table-utils">
