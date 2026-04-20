@@ -1,16 +1,23 @@
-import { useRef, type ChangeEvent, type HTMLProps, type InputEvent, type MouseEvent } from "react";
-import "./table.css"
+import { useEffect, useRef, useState,  } from "react";
+import type { ChangeEvent, HTMLProps, MouseEvent, RefObject } from "react";
 import Checkbox from "../Checkbox/Checkbox";
+import "./table.css";
 
-type TableProps = {
-  dataArray: Record<string, any>[],
+type TableProps<T extends Record<string, any>> = {
+  dataArray: T[],
   title: string
 } & HTMLProps<HTMLTableElement>
 
-const Table = ({dataArray, title, ...props}: TableProps) => {
+const Table = <T extends Record<string, any>,>({dataArray, title, ...props}: TableProps<T>) => {
   const selectAll = useRef<HTMLInputElement>(null);
   const rowSelectors = useRef<HTMLInputElement[]>([]);
-  const body = useRef<HTMLTableSectionElement>(null);
+  const tableBody = useRef<HTMLTableSectionElement>(null);
+
+  const [selectedItems, setSelectedItems] = useState<Map<number, T>>(new Map());
+
+  const [modal, setModal] = useState<null | "insert" | "update">(null);
+  const insertModal = useRef<HTMLDialogElement>(null);
+  const updateModal = useRef<HTMLDialogElement>(null);
 
   const selectAllItems = (e: ChangeEvent<HTMLInputElement, HTMLInputElement> | MouseEvent<HTMLTableHeaderCellElement | HTMLTableCellElement, globalThis.MouseEvent>) => {
     e.stopPropagation();
@@ -18,17 +25,27 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
     const target = e.target as HTMLElement;
 
     if (!target.matches("input")) {
-      const select = (target as HTMLTableHeaderCellElement | HTMLTableCellElement).firstChild as HTMLInputElement;
+      const select = (target as HTMLTableHeaderCellElement | HTMLTableCellElement).querySelector("input");
 
-      select.checked = select.checked ? false : true;
+      select!.checked = select!.checked ? false : true;
     }
 
     rowSelectors.current.forEach(select => {
-      select!.checked = select!.checked ? false : true;
+      select.checked = select.checked ? false : true;
 
       const row = select.closest("tr");
-
+      
       row!.toggleAttribute("selected");
+
+      const i = Number(row?.dataset.index);
+
+      setSelectedItems(selected => {
+        const newSelected = new Map(selected);
+      
+        select.checked ? newSelected.set(i, dataArray[i]) : newSelected.delete(i);
+
+        return newSelected;
+      });
     })
   }
 
@@ -36,21 +53,59 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
     e.stopPropagation();
 
     const target = e.target as HTMLElement;
+    let select;
 
     if (!target.matches("input")) {
-      const select = (target as HTMLTableHeaderCellElement | HTMLTableCellElement).firstChild as HTMLInputElement;
+      select = (target as HTMLTableHeaderCellElement | HTMLTableCellElement).querySelector("input");
 
-      select.checked = select.checked ? false : true;
+      select!.checked = select!.checked ? false : true;
     }
 
+    select = target as HTMLInputElement;
     const row = (e.target as HTMLInputElement).closest("tr");
 
     row!.toggleAttribute("selected");
+
+    const i = Number(row?.dataset.index);
+
+    setSelectedItems(selected => {
+      const newSelected = new Map(selected);
+      
+      select.checked ? newSelected.set(i, dataArray[i]) : newSelected.delete(i);
+
+      return newSelected;
+    });
+
   }
+
+  const closeModal = (modal: RefObject<HTMLDialogElement | null>) => {
+    modal.current!.close();
+    setModal(null);
+  }
+  
+  useEffect(() => {
+    if (!modal) return;
+
+    switch(modal) {
+      case "insert":
+        insertModal.current!.showModal();
+        break;
+      case "update":
+        updateModal.current!.showModal();
+        break;
+    }
+  }, [modal])
 
   return (
     <>
-      <Checkbox name="test" id="test" className="test"/>
+      <dialog id="insert" ref={insertModal}>
+        <p>test</p>
+        <button className="close" onClick={() => closeModal(insertModal)}>close</button>
+      </dialog>
+      <dialog id="update" ref={updateModal}>
+        <p>test</p>
+        <button className="close" onClick={() => closeModal(updateModal)}>close</button>
+      </dialog>
       <h1>{title}</h1>
       <div className="table">
         <div className="table-utils">
@@ -69,7 +124,7 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
               </svg>
             </button>
           </div>
-          <button>
+          <button className="insert" onClick={() => setModal("insert")}>
             Add +
           </button>
         </div>
@@ -78,13 +133,14 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
             <thead>
               <tr>
                 <th scope="col" onClickCapture={selectAllItems} className="selectable" >
-                  <input 
-                    type="checkbox"
-                    name="all"   
-                    id="all" 
-                    ref={selectAll}
-                    onChange={selectAllItems}
-                  />
+                  <div>
+                    <Checkbox 
+                      name="all" 
+                      id="all" 
+                      ref={selectAll}
+                      onChange={selectAllItems}
+                    />
+                  </div>
                 </th>
                 {Object.keys(dataArray[0]).map(item => 
                   <th scope="col" key={item}>
@@ -93,18 +149,19 @@ const Table = ({dataArray, title, ...props}: TableProps) => {
                 )}
               </tr>
             </thead>
-            <tbody ref={body}>
+            <tbody ref={tableBody}>
               {dataArray.map((item, index) =>
-                <tr id={`row${index+1}`} key={`row${index+1}`}>
+                <tr id={`row${index+1}`} key={`row${index+1}`} data-index={index}>
                   <th scope="row" onClickCapture={selectItem} className="selectable">
-                    <input 
-                      ref={element => {rowSelectors.current[index] = element as HTMLInputElement}}
-                      type="checkbox" 
-                      name={`select${index}`}
-                      id={`select${index}`}
-                      className="select"
-                      onChange={selectItem}
-                    />
+                    <div>
+                      <Checkbox 
+                        ref={element => {rowSelectors.current[index] = element as HTMLInputElement}}
+                        name={`select${index}`}
+                        id={`select${index}`}
+                        className="select"
+                        onChange={selectItem}
+                      />
+                    </div>
                   </th>
                   {Object.values(item).map((value, index) =>
                     <td key={index}>{value instanceof Date ? value.toLocaleString() : value}</td>

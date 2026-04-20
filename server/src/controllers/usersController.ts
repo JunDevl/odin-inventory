@@ -20,9 +20,9 @@ export const createUser: RequestHandler = async (req, res) => {
   }
 
   const [row] = createdUser;
-  const {id: createdUserUUID} = row!;
+  const {user} = row!;
 
-  res.send(createdUserUUID); 
+  res.send(user); 
 }
 
 export const authenticateUser: RequestHandler = async (req, res) => {

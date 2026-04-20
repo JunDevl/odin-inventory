@@ -31,7 +31,7 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
   const created = await errorHandler(sql`
     INSERT INTO users (name, email, password_hash)
     VALUES (${username}, ${email}, ${hashedPassword})
-    RETURNING users.id
+    RETURNING (users.id, users.name)
   `)
 
   if (created instanceof PromiseError) throw new Error(created.error);
