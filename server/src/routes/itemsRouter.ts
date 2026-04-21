@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllItemCategories, getAllAvaliableItems, getAvaliableItem, getItemCategory } from "../controllers/itemsController.ts";
+import { getAllItemCategories, getAllAvaliableItems, getAvaliableItem, getItemCategory, getAllItemUnits, getItemUnit } from "../controllers/itemsController.ts";
 import path from "path";
 import express from "express";
 
@@ -16,5 +16,8 @@ itemsRouter.get("/avaliable/:itemName", getAvaliableItem);
 
 itemsRouter.get("/categories", getAllItemCategories);
 itemsRouter.get("/categories/:categoryName", getItemCategory);
+
+itemsRouter.get("/units", getAllItemUnits);
+itemsRouter.get("/units/:unitName", getItemUnit);
 
 export default itemsRouter;

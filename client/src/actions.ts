@@ -1,6 +1,9 @@
-import type { UUID } from "crypto";
+import type { UUID } from "node:crypto";
+import type { Route, APIMutationParams } from "@app/utils";
 
-type Data = "stocks" | "operations" | "storages" | "entities" | "avaliable_items" | "item_categories"
+const postHeaders: HeadersInit = {
+  'content-type': "application/json"
+}
 
 export const validateUser = async (email: string, password: string) => {
   const data = await fetch(`${import.meta.env["VITE_API_URI"]!}/users/auth?email=${email}&pass=${password}`);
@@ -13,16 +16,13 @@ export const validateUser = async (email: string, password: string) => {
 }
 
 export const createNewUser = async (username: string, email: string, password: string, initData?: boolean) => {
-  const headers: HeadersInit = {
-    'content-type': "application/json"
-  }
   const body = JSON.stringify({ username, email, password, initData })
 
   const postUser = await fetch(
     `${import.meta.env["VITE_API_URI"]!}/users`,
     { 
       method: "POST", 
-      headers, 
+      headers: postHeaders, 
       body 
     }
   );
@@ -31,21 +31,21 @@ export const createNewUser = async (username: string, email: string, password: s
 
   const createdUserUUID = await postUser.text();
 
-  // const 
-
   return createdUserUUID;
 }
 
-export const fetchAll = async (userID: UUID, dataName: Data) => {
-  let data: Response;
+export const fetchAll = async (userID: UUID, route: Route) => {
+  let uri;
   let res: Record<string, any>[];
 
-  console.log(`${import.meta.env["VITE_API_URI"]!}/${userID}/${dataName}`);
+  if (route.includes("item")) {
+    const itemRoute = route === "avaliable_items" ? "avaliable" : route === "item_categories" ? "categories" : "units"
 
-  if (dataName === "item_categories" || dataName === "avaliable_items") 
-    data = await fetch(`${import.meta.env["VITE_API_URI"]!}/${userID}/items/${dataName === "avaliable_items" ? "avaliable" : "categories"}`);
-  else 
-    data = await fetch(`${import.meta.env["VITE_API_URI"]!}/${userID}/${dataName}`);
+    uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/items/${itemRoute}`;
+  }
+  else uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/${route}`;
+
+  const data = await fetch(uri);
 
   if (!data.ok) {
     if (data.status === 404) return [];
@@ -62,4 +62,32 @@ export const fetchAll = async (userID: UUID, dataName: Data) => {
   }
 
   return res;
+}
+
+export const create = async <T extends Route>(userID: UUID, route: T, params: APIMutationParams[T]) => {
+  const body = JSON.stringify(params);
+  let uri;
+  
+  if (route.includes("item")) {
+    const itemRoute = route === "avaliable_items" ? "avaliable" : route === "item_categories" ? "categories" : "units"
+
+    uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/items/${itemRoute}`;
+  }
+  else uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/${route}`;
+
+  const postData = await fetch(uri, { 
+    method: "POST", 
+    headers: postHeaders, 
+    body 
+  })
+
+  if (!postData.ok) throw new Error(await postData.text());
+
+  const created = await postData.text();
+
+  return created;
+}
+
+export const update = async (userID: UUID, route: Route) => {
+  
 }

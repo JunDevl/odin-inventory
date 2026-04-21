@@ -1,7 +1,29 @@
 import type { RequestHandler } from "express";
-import { retrieveAllUserItemCategories, retrieveAllUserItems } from "../models/db.ts";
-import { errorHandler, PromiseError } from "@app/utils";
+import { retrieveAllUserItemCategories, retrieveAllUserItems, retrieveAllUserItemUnits } from "../models/db.ts";
+import { handleError, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
+
+export const getAllItemUnits: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+    
+  if (!id) {
+    res.status(400)
+    throw new Error("No user id provided.");
+  }
+
+  const units = await handleError(retrieveAllUserItemUnits(id));
+
+  if (units instanceof PromiseError) {
+    res.status(404)
+    throw new Error(units.error);
+  }
+
+  res.json(units);
+}
+
+export const getItemUnit: RequestHandler = async (req, res) => {
+
+}
 
 export const getAllItemCategories: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
@@ -11,7 +33,7 @@ export const getAllItemCategories: RequestHandler = async (req, res) => {
     throw new Error("No user id provided.");
   }
 
-  const categories = await errorHandler(retrieveAllUserItemCategories(id));
+  const categories = await handleError(retrieveAllUserItemCategories(id));
 
   if (categories instanceof PromiseError) {
     res.status(404)
@@ -33,7 +55,7 @@ export const getAllAvaliableItems: RequestHandler = async (req, res) => {
     throw new Error("No user id provided.");
   }
 
-  const items = await errorHandler(retrieveAllUserItems(id));
+  const items = await handleError(retrieveAllUserItems(id));
 
   if (items instanceof PromiseError) {
     res.status(404)

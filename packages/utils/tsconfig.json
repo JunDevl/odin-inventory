@@ -6,6 +6,7 @@
     "strict": true,
     "module": "nodenext",
     "target": "esnext",
-    "composite": true
+    "composite": true,
+    "types": ["node"]
   }
 }

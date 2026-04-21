@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import argon2 from "argon2"
 import { insertNewUser, retrieveUser } from "../models/db.ts";
-import { errorHandler, PromiseError } from "@app/utils";
+import { handleError, PromiseError } from "@app/utils";
 
 export const createUser: RequestHandler = async (req, res) => {
   const { username, email, password, initData } = req.body;
@@ -12,7 +12,7 @@ export const createUser: RequestHandler = async (req, res) => {
     timeCost: 5
   })
 
-  const createdUser = await errorHandler(insertNewUser(username, email, hashedPassword, initData));
+  const createdUser = await handleError(insertNewUser(username, email, hashedPassword, initData));
 
   if (createdUser instanceof PromiseError) {
     res.status(500)
@@ -38,7 +38,7 @@ export const authenticateUser: RequestHandler = async (req, res) => {
     throw new Error("Invalid query parameters.");
   }
 
-  const dbRecord = await errorHandler(retrieveUser(email));
+  const dbRecord = await handleError(retrieveUser(email));
 
   if (dbRecord instanceof PromiseError) {
     res.status(404);

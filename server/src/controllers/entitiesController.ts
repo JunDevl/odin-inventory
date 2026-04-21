@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { retrieveAllUserEntityFranchises } from "../models/db.ts";
-import { errorHandler, PromiseError } from "@app/utils";
+import { handleError, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
 
 export const getAllEntities: RequestHandler = async (req, res) => {
@@ -11,7 +11,7 @@ export const getAllEntities: RequestHandler = async (req, res) => {
     throw new Error("No user id provided.");
   }
 
-  const entities = await errorHandler(retrieveAllUserEntityFranchises(id));
+  const entities = await handleError(retrieveAllUserEntityFranchises(id));
 
   if (entities instanceof PromiseError) {
     res.status(404)
