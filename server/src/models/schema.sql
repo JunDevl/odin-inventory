@@ -149,3 +149,8 @@ CREATE TABLE IF NOT EXISTS operations (
 );
 
 CREATE INDEX operations_idx ON operations(user_id);
+
+CREATE VIEW operations_with_totals AS
+SELECT o.*, (p.price_cents), (p.price_cents * o.quantity) AS total_price_cents 
+FROM operations AS o
+JOIN items_unit_price_history p ON CONCAT(o.unit_price_user_id, o.unit_price_item_name, o.unit_price_id) = CONCAT(p.item_user_id, p.item_name, p.history_id);

@@ -4,12 +4,12 @@ import { fetchAll } from "../../../actions";
 import Table from "../../components/Table/Table";
 import type { TableTypes } from "@app/utils";
 
-type CategoriesProps = {}
+type UnitsProps = {}
 
-const ItemCategories = (props: CategoriesProps) => {
-  const {status, error, data: categories} = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => fetchAll(localStorage.getItem("userUUID")! as UUID, "item_categories")
+const ItemUnits = (props: UnitsProps) => {
+  const {status, error, data: units} = useQuery({
+    queryKey: ["units"],
+    queryFn: () => fetchAll(localStorage.getItem("userUUID")! as UUID, "item_units")
   })
 
   if (status === "pending") return <p>Loading...</p>
@@ -19,19 +19,21 @@ const ItemCategories = (props: CategoriesProps) => {
   return (
     <>
       <Table 
-        title="Item Categories" 
-        dataArray={categories as TableTypes.ItemCategory[]}
+        title="Item Units" 
+        dataArray={units as TableTypes.Item[]}
         requiredInputColumnTypes={{
           name: "string",
-          description: "blank"
+          description: "blank",
+          wikipedia_url: "blank"
         }}
         renamedColumns={{
-          name: "Category Name",
-          description: "Description"
+          name: "Unit Name",
+          description: "Descripton",
+          wikipedia_url: "Wikipedia Link"
         }}
       >
       </Table>
     </>
   )
 }
-export default ItemCategories
+export default ItemUnits

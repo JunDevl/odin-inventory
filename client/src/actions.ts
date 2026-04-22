@@ -1,5 +1,5 @@
 import type { UUID } from "node:crypto";
-import type { Route, APIMutationParams } from "@app/utils";
+import type { DataRoute, APICreateUpdateParams, RouteTableMapping } from "@app/utils";
 
 const postHeaders: HeadersInit = {
   'content-type': "application/json"
@@ -34,7 +34,7 @@ export const createNewUser = async (username: string, email: string, password: s
   return createdUserUUID;
 }
 
-export const fetchAll = async (userID: UUID, route: Route) => {
+export const fetchAll = async (userID: UUID, route: DataRoute) => {
   let uri;
   let res: Record<string, any>[];
 
@@ -56,15 +56,15 @@ export const fetchAll = async (userID: UUID, route: Route) => {
 
   for (const item of res) {
     for (const k of Object.keys(item)) {
-      if (typeof item[k] !== "string" || !k.includes("date") && !k.includes("datetime") && !k.includes("at")) continue;
-      item[k] = new Date(item[k])
+      if (item[k] === null || !k.includes("date") || !k.includes("datetime") || !k.includes("at")) continue;
+      item[k] = new Date(item[k]);
     }
   }
 
-  return res;
+  return res as RouteTableMapping[typeof route][];
 }
 
-export const create = async <T extends Route>(userID: UUID, route: T, params: APIMutationParams[T]) => {
+export const create = async <T extends DataRoute>(userID: UUID, route: T, params: APICreateUpdateParams[T]) => {
   const body = JSON.stringify(params);
   let uri;
   
@@ -88,6 +88,6 @@ export const create = async <T extends Route>(userID: UUID, route: T, params: AP
   return created;
 }
 
-export const update = async (userID: UUID, route: Route) => {
+export const update = async (userID: UUID, route: DataRoute) => {
   
 }

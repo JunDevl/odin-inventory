@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchAll } from "../../../actions";
 import Table from "../../components/Table/Table";
 import type { UUID } from "crypto";
+import type { TableTypes } from "@app/utils";
 
 type ItemsProps = {}
 
@@ -17,7 +18,18 @@ const AvaliableItems = (props: ItemsProps) => {
 
   return (
     <>
-      <Table title="Avaliable Items" dataArray={items}>
+      <Table 
+        title="Avaliable Items" 
+        dataArray={items as TableTypes.Item[]}
+        requiredInputColumnTypes={{
+          name: "string",
+          description: "blank"
+        }}
+        renamedColumns={{
+          name: "Item Name",
+          description: "Description"
+        }}
+      >
       </Table>
     </>
   )

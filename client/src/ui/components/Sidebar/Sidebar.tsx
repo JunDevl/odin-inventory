@@ -60,11 +60,20 @@ const Sidebar = (props: SidebarProps) => {
                 Item Categories
               </Link>
             </li>
+            <li id="units" className={location.pathname === getRelativePath("items/units") ? "selected" : ""}>
+              <Link to={getRelativePath("items/units")} relative="path">
+                Units
+              </Link>
+            </li>
           </ul>
         </li>
       </ul>
       <ul className="bottom">
-        <li>Account</li>
+        <li id="account" className={location.pathname === getRelativePath("account") ? "selected" : ""}>
+          <Link to={getRelativePath("account")} relative="path">
+            Account
+          </Link>
+        </li>
       </ul>
     </nav>
   )

@@ -55,7 +55,7 @@ export const getAllAvaliableItems: RequestHandler = async (req, res) => {
     throw new Error("No user id provided.");
   }
 
-  const items = await handleError(retrieveAllUserItems(id));
+  const items = await handleError(retrieveAllUserItems(id, true));
 
   if (items instanceof PromiseError) {
     res.status(404)

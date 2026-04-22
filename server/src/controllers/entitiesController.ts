@@ -11,7 +11,7 @@ export const getAllEntities: RequestHandler = async (req, res) => {
     throw new Error("No user id provided.");
   }
 
-  const entities = await handleError(retrieveAllUserEntityFranchises(id));
+  const entities = await handleError(retrieveAllUserEntityFranchises(id, true));
 
   if (entities instanceof PromiseError) {
     res.status(404)

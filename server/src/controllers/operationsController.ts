@@ -11,7 +11,7 @@ export const getAllOperations: RequestHandler = async (req, res) => {
     throw new Error("No user id provided.");
   }
 
-  const operations = await handleError(retrieveAllUserOperation(id));
+  const operations = await handleError(retrieveAllUserOperation(id, true));
 
   if (operations instanceof PromiseError) {
     res.status(404)

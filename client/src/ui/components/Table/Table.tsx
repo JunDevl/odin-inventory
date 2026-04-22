@@ -2,18 +2,28 @@ import { useEffect, useRef, useState,  } from "react";
 import type { ChangeEvent, HTMLProps, MouseEvent, RefObject } from "react";
 import Checkbox from "../Checkbox/Checkbox";
 import "./table.css";
+import type { RouteTableMapping } from "@app/utils";
 
-type TableProps<T extends Record<string, any>> = {
+type Table = RouteTableMapping[keyof RouteTableMapping];
+
+type Primitive = "string" | "number" | "boolean";
+
+type TableProps<T extends Table> = {
   dataArray: T[],
-  title: string
+  title: string,
+  requiredInputColumnTypes: {
+    [TableColumn in keyof T | (string & {})]?: Primitive | object | "auto" | "blank"
+  },
+  renamedColumns: {
+    [TableColumn in keyof T | (string & {})]?: string
+  }
 } & HTMLProps<HTMLTableElement>
 
-const Table = <T extends Record<string, any>,>({dataArray, title, ...props}: TableProps<T>) => {
+const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, renamedColumns, ...props}: TableProps<T>) => {
   const selectAll = useRef<HTMLInputElement>(null);
   const rowSelectors = useRef<HTMLInputElement[]>([]);
   const tableBody = useRef<HTMLTableSectionElement>(null);
-
-  const [selectedItems, setSelectedItems] = useState<Map<number, T>>(new Map());
+  const [selectedItemIndexes, setSelectedItemIndexes] = useState(new Int8Array(dataArray.length).fill(0));
 
   const [modal, setModal] = useState<null | "insert" | "update">(null);
   const insertModal = useRef<HTMLDialogElement>(null);
@@ -24,25 +34,29 @@ const Table = <T extends Record<string, any>,>({dataArray, title, ...props}: Tab
 
     const target = e.target as HTMLElement;
 
-    if (!target.matches("input")) {
-      const select = (target as HTMLTableHeaderCellElement | HTMLTableCellElement).querySelector("input");
+    if (target.matches("label")) return;
 
-      select!.checked = select!.checked ? false : true;
-    }
+    const targetIsInput = target.matches("input");
 
-    rowSelectors.current.forEach(select => {
-      select.checked = select.checked ? false : true;
+    const checkbox = !targetIsInput ?
+      target.querySelector("input") :
+      target as HTMLInputElement;
 
-      const row = select.closest("tr");
+    if (!targetIsInput) checkbox!.checked = checkbox!.checked ? false : true;
+
+    rowSelectors.current.forEach(selector => {
+      selector.checked = selector.checked ? false : true;
+
+      const row = selector.closest("tr");
       
       row!.toggleAttribute("selected");
 
       const i = Number(row?.dataset.index);
 
-      setSelectedItems(selected => {
-        const newSelected = new Map(selected);
-      
-        select.checked ? newSelected.set(i, dataArray[i]) : newSelected.delete(i);
+      setSelectedItemIndexes(previousSelected => {
+        const newSelected = new Int8Array(previousSelected);
+
+        newSelected[i] = selector.checked ? 1 : 0;
 
         return newSelected;
       });
@@ -53,34 +67,34 @@ const Table = <T extends Record<string, any>,>({dataArray, title, ...props}: Tab
     e.stopPropagation();
 
     const target = e.target as HTMLElement;
-    let select;
 
-    if (!target.matches("input")) {
-      select = (target as HTMLTableHeaderCellElement | HTMLTableCellElement).querySelector("input");
+    if (target.matches("label")) return;
 
-      select!.checked = select!.checked ? false : true;
-    }
+    const targetIsInput = target.matches("input");
 
-    select = target as HTMLInputElement;
+    const checkbox = !targetIsInput ?
+      target.querySelector("input") :
+      target as HTMLInputElement;
+
+    if (!targetIsInput) checkbox!.checked = checkbox!.checked ? false : true;
+    
     const row = (e.target as HTMLInputElement).closest("tr");
 
     row!.toggleAttribute("selected");
 
     const i = Number(row?.dataset.index);
 
-    setSelectedItems(selected => {
-      const newSelected = new Map(selected);
-      
-      select.checked ? newSelected.set(i, dataArray[i]) : newSelected.delete(i);
+    setSelectedItemIndexes(previousSelected => {
+      const newSelected = new Int8Array(previousSelected);
+
+      newSelected[i] = checkbox!.checked ? 1 : 0;
 
       return newSelected;
     });
-
   }
 
   const closeModal = (modal: RefObject<HTMLDialogElement | null>) => {
     modal.current!.close();
-    setModal(null);
   }
   
   useEffect(() => {
@@ -96,13 +110,42 @@ const Table = <T extends Record<string, any>,>({dataArray, title, ...props}: Tab
     }
   }, [modal])
 
+  const showCellData = (index: number, key: keyof T) => {
+    const data = dataArray[index][key];
+
+    if (!data) return "";
+
+    if (data instanceof Date) return data.toLocaleString();
+
+    if ((key as string).includes("cent")) {
+      const dollar = data as number / 100;
+
+      const dollarFormat = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+      
+      return dollarFormat.format(dollar);
+    }
+
+    if ((key as string).includes("url")) {
+      return <a href={data as string} target="_blank">{data as any}</a>
+    }
+
+    if ((key as string) === "type") {
+      return (data as string)
+        .split("_")
+        .map(text => `${text[0].toUpperCase()}${text.slice(1)}`)
+        .reduce((prev, cur) => `${prev} ${cur}`)
+    }
+
+    return data as any; 
+  }
+
   return (
     <>
-      <dialog id="insert" ref={insertModal}>
-        <p>test</p>
+      <dialog id="insert" ref={insertModal} onClose={() => setModal(null)}>
+        <p>Insert new</p>
         <button className="close" onClick={() => closeModal(insertModal)}>close</button>
       </dialog>
-      <dialog id="update" ref={updateModal}>
+      <dialog id="update" ref={updateModal} onClose={() => setModal(null)}>
         <p>test</p>
         <button className="close" onClick={() => closeModal(updateModal)}>close</button>
       </dialog>
@@ -124,9 +167,24 @@ const Table = <T extends Record<string, any>,>({dataArray, title, ...props}: Tab
               </svg>
             </button>
           </div>
-          <button className="insert" onClick={() => setModal("insert")}>
-            Add +
-          </button>
+          {selectedItemIndexes.includes(1) ? 
+            selectedItemIndexes.filter(val => val === 1).length > 1 ? 
+              <button className="delete" onClick={() => console.log("delete selected")}>
+                Delete Selected
+              </button>  :
+              <>
+                <button className="insert" onClick={() => setModal("update")}>
+                  Edit
+                </button>
+                <button className="delete" onClick={() => console.log("delete")}>
+                  Delete
+                </button>
+              </>
+            :
+            <button className="insert" onClick={() => setModal("insert")}>
+              Add +
+            </button>
+          }
         </div>
         {dataArray.length > 0 ?
           <table title={title} {...props}>
@@ -142,15 +200,15 @@ const Table = <T extends Record<string, any>,>({dataArray, title, ...props}: Tab
                     />
                   </div>
                 </th>
-                {Object.keys(dataArray[0]).map(item => 
-                  <th scope="col" key={item}>
-                    {item}
+                {Object.values(renamedColumns).map(col => 
+                  <th scope="col" key={col}>
+                    {col}
                   </th>
                 )}
               </tr>
             </thead>
             <tbody ref={tableBody}>
-              {dataArray.map((item, index) =>
+              {dataArray.map((_, index) =>
                 <tr id={`row${index+1}`} key={`row${index+1}`} data-index={index}>
                   <th scope="row" onClickCapture={selectItem} className="selectable">
                     <div>
@@ -163,8 +221,10 @@ const Table = <T extends Record<string, any>,>({dataArray, title, ...props}: Tab
                       />
                     </div>
                   </th>
-                  {Object.values(item).map((value, index) =>
-                    <td key={index}>{value instanceof Date ? value.toLocaleString() : value}</td>
+                  {Object.keys(renamedColumns).map((key) =>
+                    <td key={key}>
+                      {showCellData(index, key as keyof T)}
+                    </td>
                   )}
                 </tr>
               )}
