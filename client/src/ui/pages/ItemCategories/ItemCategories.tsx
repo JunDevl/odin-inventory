@@ -22,8 +22,8 @@ const ItemCategories = (props: CategoriesProps) => {
         title="Item Categories" 
         dataArray={categories as TableTypes.ItemCategory[]}
         requiredInputColumnTypes={{
-          name: "string",
-          description: "blank"
+          name: {type: "string", inputPlaceholder: "default"},
+          description: {type: "string", inputPlaceholder: "blank"}
         }}
         renamedColumns={{
           name: "Category Name",

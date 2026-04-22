@@ -22,9 +22,9 @@ const ItemUnits = (props: UnitsProps) => {
         title="Item Units" 
         dataArray={units as TableTypes.Item[]}
         requiredInputColumnTypes={{
-          name: "string",
-          description: "blank",
-          wikipedia_url: "blank"
+          name: {type: "string", inputPlaceholder: "default"},
+          description: {type: "string", inputPlaceholder: "blank"},
+          wikipedia_url: {type: "string", inputPlaceholder: "blank"}
         }}
         renamedColumns={{
           name: "Unit Name",

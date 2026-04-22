@@ -22,10 +22,10 @@ const Entities = (props: EntitiesProps) => {
         title="Entities" 
         dataArray={entities as TableTypes.EntityFranchise[]}
         requiredInputColumnTypes={{
-          entity_name: "string",
-          trade: "blank",
-          address: "string",
-          type: "string"
+          entity_name: {type: "string", inputPlaceholder: "default"},
+          trade: {type: "string", inputPlaceholder: "blank"},
+          address: {type: "string", inputPlaceholder: "default"},
+          type: {type: "string", inputPlaceholder: "default"}
         }}
         renamedColumns={{
           entity_name: "Name",

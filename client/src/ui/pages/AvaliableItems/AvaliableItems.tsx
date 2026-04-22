@@ -22,8 +22,8 @@ const AvaliableItems = (props: ItemsProps) => {
         title="Avaliable Items" 
         dataArray={items as TableTypes.Item[]}
         requiredInputColumnTypes={{
-          name: "string",
-          description: "blank"
+          name: {type: "string", inputPlaceholder: "default"},
+          description: {type: "string", inputPlaceholder: "blank"}
         }}
         renamedColumns={{
           name: "Item Name",

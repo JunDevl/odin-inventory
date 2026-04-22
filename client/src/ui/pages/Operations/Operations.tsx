@@ -23,16 +23,16 @@ const Operations = (props: OperationsProps) => {
         title="Operations" 
         dataArray={operations as TableTypes.Operation[]}
         requiredInputColumnTypes={{
-          item_name: "string",
-          unit_name: "auto",
-          price_cents: "auto",
-          quantity: "number",
-          addressee_entity_name: "string",
-          addressee_franchise_address: "string",
-          sendee_entity_name: "string",
-          sendee_franchise_address: "string",
-          shipped_at: "blank",
-          arrived_at: "blank"
+          item_name: {type: "string", inputPlaceholder: "default"},
+          unit_name: {type: "string", inputPlaceholder: "auto"},
+          price_cents: {type: "number", inputPlaceholder: "auto"},
+          quantity: {type: "number", inputPlaceholder: "default"},
+          addressee_entity_name: {type: "string", inputPlaceholder: "default"},
+          addressee_franchise_address: {type: "string", inputPlaceholder: "default"},
+          sendee_entity_name: {type: "string", inputPlaceholder: "default"},
+          sendee_franchise_address: {type: "string", inputPlaceholder: "default"},
+          shipped_at: {type: Date, inputPlaceholder: "blank"},
+          arrived_at: {type: Date, inputPlaceholder: "blank"}
         }}
         renamedColumns={{
           item_name: "Item",

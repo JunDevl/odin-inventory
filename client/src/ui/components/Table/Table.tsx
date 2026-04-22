@@ -6,13 +6,17 @@ import type { RouteTableMapping } from "@app/utils";
 
 type Table = RouteTableMapping[keyof RouteTableMapping];
 
-type Primitive = "string" | "number" | "boolean";
+type Primitive = "string" | "number" | "boolean" | object;
+
+type PlaceholderType = "default" | "auto" | "blank";
+
+type InputDetail = {type: Primitive, inputPlaceholder: PlaceholderType}
 
 type TableProps<T extends Table> = {
   dataArray: T[],
   title: string,
   requiredInputColumnTypes: {
-    [TableColumn in keyof T | (string & {})]?: Primitive | object | "auto" | "blank"
+    [TableColumn in keyof T | (string & {})]?: InputDetail
   },
   renamedColumns: {
     [TableColumn in keyof T | (string & {})]?: string
@@ -139,14 +143,51 @@ const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, re
     return data as any; 
   }
 
+  const modalInput = (key: string, value: InputDetail, operation: "insert" | "update") => {
+    switch (value?.type) {
+      case "boolean":
+        return <Checkbox name={key} id={key} />
+      case "number":
+        return <input type="number" name={key} id={key} />
+      case "string":
+        return <input type="text" name={key} id={key} />
+      case Date:
+        return <input type="datetime-local" name={key} id={key} />
+      default:
+        return <input type="text" name={key} id={key} />
+    }
+  }
+
   return (
     <>
       <dialog id="insert" ref={insertModal} onClose={() => setModal(null)}>
         <p>Insert new</p>
+        <form action="POST">
+          <ul>
+            {Object.entries(requiredInputColumnTypes).map(([key, value]) => 
+              <li key={key}>
+                <label htmlFor={key}>{renamedColumns[key]}</label>
+                {modalInput(key, value!, "insert")}
+              </li>
+            )}
+          </ul>
+          <button type="submit">Submit</button>
+        </form>
         <button className="close" onClick={() => closeModal(insertModal)}>close</button>
       </dialog>
       <dialog id="update" ref={updateModal} onClose={() => setModal(null)}>
-        <p>test</p>
+        <p>Edit</p>
+        <form action="PUT">
+          <ul>
+            {Object.entries(requiredInputColumnTypes).map(([key, value]) => 
+              <li key={key}>
+                <label htmlFor={key}>{renamedColumns[key]}</label>
+                {modalInput(key, value!, "update")}
+              </li>
+            )}
+          </ul>
+          <button type="submit">Submit</button>
+        </form>
         <button className="close" onClick={() => closeModal(updateModal)}>close</button>
       </dialog>
       <h1>{title}</h1>
