@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import type { UUID } from "crypto";
 import { fetchAll } from "../../../actions";
 import Table from "../../components/Table/Table";
-import type { TableTypes } from "@app/utils";
 
 type CategoriesProps = {}
 
@@ -20,7 +19,7 @@ const ItemCategories = (props: CategoriesProps) => {
     <>
       <Table 
         title="Item Categories" 
-        dataArray={categories as TableTypes.ItemCategory[]}
+        dataArray={categories}
         requiredInputColumnTypes={{
           name: {type: "string", inputPlaceholder: "default"},
           description: {type: "string", inputPlaceholder: "blank"}

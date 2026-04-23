@@ -3,20 +3,23 @@ import type { ChangeEvent, HTMLProps, MouseEvent, RefObject } from "react";
 import Checkbox from "../Checkbox/Checkbox";
 import "./table.css";
 import type { RouteTableMapping } from "@app/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Table = RouteTableMapping[keyof RouteTableMapping];
 
-type Primitive = "string" | "number" | "boolean" | object;
+type Primitive = "string" | "number" | "boolean" | DateConstructor;
 
-type PlaceholderType = "default" | "auto" | "blank";
+type InputPlaceholder = "default" | "auto" | "blank";
 
-type InputDetail = {type: Primitive, inputPlaceholder: PlaceholderType}
+type InputDetail<T> = T extends [Primitive, "list"] ? 
+{type: T, inputPlaceholder: InputPlaceholder, listQueryKey: string} :
+{type: T, inputPlaceholder: InputPlaceholder};
 
 type TableProps<T extends Table> = {
   dataArray: T[],
   title: string,
   requiredInputColumnTypes: {
-    [TableColumn in keyof T | (string & {})]?: InputDetail
+    [TableColumn in keyof T | (string & {})]?: InputDetail<Primitive | [Primitive, "list"]>
   },
   renamedColumns: {
     [TableColumn in keyof T | (string & {})]?: string
@@ -27,11 +30,21 @@ const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, re
   const selectAll = useRef<HTMLInputElement>(null);
   const rowSelectors = useRef<HTMLInputElement[]>([]);
   const tableBody = useRef<HTMLTableSectionElement>(null);
+
   const [selectedItemIndexes, setSelectedItemIndexes] = useState(new Int8Array(dataArray.length).fill(0));
+  const selectedIndexes = (() => {
+    const arr: number[] = [];
+
+    selectedItemIndexes.forEach((value, index) => {if (value === 1) arr.push(index)});
+
+    return arr;
+  })();
 
   const [modal, setModal] = useState<null | "insert" | "update">(null);
   const insertModal = useRef<HTMLDialogElement>(null);
   const updateModal = useRef<HTMLDialogElement>(null);
+
+  const queryClient = useQueryClient();
 
   const selectAllItems = (e: ChangeEvent<HTMLInputElement, HTMLInputElement> | MouseEvent<HTMLTableHeaderCellElement | HTMLTableCellElement, globalThis.MouseEvent>) => {
     e.stopPropagation();
@@ -143,14 +156,30 @@ const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, re
     return data as any; 
   }
 
-  const modalInput = (key: string, value: InputDetail, operation: "insert" | "update") => {
-    switch (value?.type) {
-      case "boolean":
-        return <Checkbox name={key} id={key} />
+  const modalInput = (key: string, detail: InputDetail<Primitive | [Primitive, "list"]>, operation: "insert" | "update") => {
+    const dataType = detail.type instanceof Array ? detail.type[0] : detail.type;
+
+    switch (dataType) {
+      case "boolean": {
+        const checked = !(operation === "insert") || !(detail.inputPlaceholder === "auto") ? 
+        false :
+        dataArray[selectedIndexes[0]][key as keyof Table];
+
+        return <Checkbox name={key} id={key} checked={checked}/>
+      }
       case "number":
         return <input type="number" name={key} id={key} />
-      case "string":
+      case "string": {
+        if (detail.type instanceof Array) {
+          const queryKey = (detail as any).type.listQueryKey;
+          
+          // TODO: FIX THIS SHIT!
+
+          return;
+        }
+
         return <input type="text" name={key} id={key} />
+      }
       case Date:
         return <input type="datetime-local" name={key} id={key} />
       default:
@@ -208,13 +237,13 @@ const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, re
               </svg>
             </button>
           </div>
-          {selectedItemIndexes.includes(1) ? 
-            selectedItemIndexes.filter(val => val === 1).length > 1 ? 
+          {selectedIndexes.length > 0 ? 
+            selectedIndexes.length > 1 ? 
               <button className="delete" onClick={() => console.log("delete selected")}>
                 Delete Selected
               </button>  :
               <>
-                <button className="insert" onClick={() => setModal("update")}>
+                <button className="edit" onClick={() => setModal("update")}>
                   Edit
                 </button>
                 <button className="delete" onClick={() => console.log("delete")}>
@@ -224,8 +253,7 @@ const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, re
             :
             <button className="insert" onClick={() => setModal("insert")}>
               Add +
-            </button>
-          }
+            </button>}
         </div>
         {dataArray.length > 0 ?
           <table title={title} {...props}>

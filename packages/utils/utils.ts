@@ -1,6 +1,6 @@
 import type { UUID } from "node:crypto";
 
-type Prettify<T> = {
+export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 

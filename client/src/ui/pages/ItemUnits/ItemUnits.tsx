@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import type { UUID } from "crypto";
 import { fetchAll } from "../../../actions";
 import Table from "../../components/Table/Table";
-import type { TableTypes } from "@app/utils";
 
 type UnitsProps = {}
 
@@ -20,7 +19,7 @@ const ItemUnits = (props: UnitsProps) => {
     <>
       <Table 
         title="Item Units" 
-        dataArray={units as TableTypes.Item[]}
+        dataArray={units}
         requiredInputColumnTypes={{
           name: {type: "string", inputPlaceholder: "default"},
           description: {type: "string", inputPlaceholder: "blank"},

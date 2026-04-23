@@ -34,7 +34,7 @@ export const createNewUser = async (username: string, email: string, password: s
   return createdUserUUID;
 }
 
-export const fetchAll = async (userID: UUID, route: DataRoute) => {
+export const fetchAll = async <T extends DataRoute>(userID: UUID, route: T) => {
   let uri;
   let res: Record<string, any>[];
 

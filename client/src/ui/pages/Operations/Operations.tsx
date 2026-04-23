@@ -1,17 +1,18 @@
 import Table from "../../components/Table/Table";
 import { fetchAll } from "../../../actions";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UndefinedInitialDataOptions, type UseQueryOptions } from "@tanstack/react-query";
 import type { UUID } from "crypto";
-import type { TableTypes } from "@app/utils";
+import type { Prettify } from "@app/utils";
 
 type OperationsProps = {}
 
 const Operations = (props: OperationsProps) => {
-
-  const {status, error, data: operations} = useQuery({
+  const queryOptions = {
     queryKey: ["operations"],
     queryFn: () => fetchAll(localStorage.getItem("userUUID")! as UUID, "operations")
-  })
+  } // fix
+
+  const {status, error, data: operations} = useQuery(queryOptions)
 
   if (status === "pending") return <p>Loading...</p>
 
@@ -21,16 +22,16 @@ const Operations = (props: OperationsProps) => {
     <>
       <Table 
         title="Operations" 
-        dataArray={operations as TableTypes.Operation[]}
+        dataArray={operations}
         requiredInputColumnTypes={{
-          item_name: {type: "string", inputPlaceholder: "default"},
-          unit_name: {type: "string", inputPlaceholder: "auto"},
+          item_name: {type: ["string", "list"], inputPlaceholder: "default", /*fix :vD*/listQueryKey: "items"},
+          unit_name: {type: ["string", "list"], inputPlaceholder: "auto", listQueryKey: "units"},
           price_cents: {type: "number", inputPlaceholder: "auto"},
           quantity: {type: "number", inputPlaceholder: "default"},
-          addressee_entity_name: {type: "string", inputPlaceholder: "default"},
-          addressee_franchise_address: {type: "string", inputPlaceholder: "default"},
-          sendee_entity_name: {type: "string", inputPlaceholder: "default"},
-          sendee_franchise_address: {type: "string", inputPlaceholder: "default"},
+          addressee_entity_name: {type: ["string", "list"], inputPlaceholder: "default", listQueryKey: "entities"},
+          addressee_franchise_address: {type: ["string", "list"], inputPlaceholder: "default", listQueryKey: "entities"},
+          sendee_entity_name: {type: ["string", "list"], inputPlaceholder: "default", listQueryKey: "entities"},
+          sendee_franchise_address: {type: ["string", "list"], inputPlaceholder: "default", listQueryKey: "entities"},
           shipped_at: {type: Date, inputPlaceholder: "blank"},
           arrived_at: {type: Date, inputPlaceholder: "blank"}
         }}

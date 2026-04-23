@@ -2,7 +2,6 @@ import Table from "../../components/Table/Table"
 import { useQuery } from "@tanstack/react-query";
 import { fetchAll } from "../../../actions";
 import type { UUID } from "crypto";
-import type { TableTypes } from "@app/utils";
 
 type EntitiesProps = {}
 
@@ -20,7 +19,7 @@ const Entities = (props: EntitiesProps) => {
     <>
       <Table 
         title="Entities" 
-        dataArray={entities as TableTypes.EntityFranchise[]}
+        dataArray={entities}
         requiredInputColumnTypes={{
           entity_name: {type: "string", inputPlaceholder: "default"},
           trade: {type: "string", inputPlaceholder: "blank"},

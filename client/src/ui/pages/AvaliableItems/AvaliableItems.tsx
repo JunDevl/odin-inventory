@@ -20,7 +20,7 @@ const AvaliableItems = (props: ItemsProps) => {
     <>
       <Table 
         title="Avaliable Items" 
-        dataArray={items as TableTypes.Item[]}
+        dataArray={items}
         requiredInputColumnTypes={{
           name: {type: "string", inputPlaceholder: "default"},
           description: {type: "string", inputPlaceholder: "blank"}
