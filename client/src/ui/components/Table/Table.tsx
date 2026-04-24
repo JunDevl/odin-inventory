@@ -2,8 +2,8 @@ import { useEffect, useRef, useState,  } from "react";
 import type { ChangeEvent, HTMLProps, MouseEvent, RefObject } from "react";
 import Checkbox from "../Checkbox/Checkbox";
 import "./table.css";
-import type { RouteTableMapping } from "@app/utils";
-import { useQueryClient } from "@tanstack/react-query";
+import type { QueryKeysMapping, RouteTableMapping } from "@app/utils";
+import { useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 
 type Table = RouteTableMapping[keyof RouteTableMapping];
 
@@ -11,8 +11,8 @@ type Primitive = "string" | "number" | "boolean" | DateConstructor;
 
 type InputPlaceholder = "default" | "auto" | "blank";
 
-type InputDetail<T> = T extends [Primitive, "list"] ? 
-{type: T, inputPlaceholder: InputPlaceholder, listQueryKey: string} :
+type InputDetail<T, O extends UseQueryOptions = any> = T extends [Primitive, "list"] ? 
+{type: T, inputPlaceholder: InputPlaceholder, listQueryOptions: O, relatedKey: /*change here*/string/*change here*/ } :
 {type: T, inputPlaceholder: InputPlaceholder};
 
 type TableProps<T extends Table> = {

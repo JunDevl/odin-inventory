@@ -1,9 +1,5 @@
 import type { UUID } from "node:crypto";
 
-export type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
-
 export class PromiseError<T> {
   public error: T;
 
@@ -21,6 +17,10 @@ export const handleError = async <T>(promise: Promise<T>) => {
     return new PromiseError(e);
   }
 }
+
+export type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
 
 export type EntityType = "service_provider" | "supplier" | "client";
 
@@ -102,6 +102,8 @@ export namespace TableTypes {
   }
 }
 
+export type DataQueryKeys = "operations" | "units" | "categories" | "items" | "entities"
+
 type ExhaustiveMapping<R extends string, T extends Record<R, unknown>> = T;
 
 export type RouteTableMapping = ExhaustiveMapping<DataRoute, {
@@ -111,3 +113,11 @@ export type RouteTableMapping = ExhaustiveMapping<DataRoute, {
   item_categories: TableTypes.ItemCategory,
   item_units: TableTypes.ItemUnit
 }>;
+
+export type QueryKeysMapping = ExhaustiveMapping<DataQueryKeys, {
+  operations: TableTypes.Operation,
+  entities: TableTypes.EntityFranchise,
+  items: TableTypes.Item,
+  categories: TableTypes.ItemCategory,
+  units: TableTypes.ItemUnit
+}>

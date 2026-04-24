@@ -1,15 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import type { UUID } from "crypto";
-import { fetchAll } from "../../../actions";
 import Table from "../../components/Table/Table";
+import { useQuery } from "@tanstack/react-query";
+import { queryOptions } from "../../../queries";
 
 type CategoriesProps = {}
 
 const ItemCategories = (props: CategoriesProps) => {
-  const {status, error, data: categories} = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => fetchAll(localStorage.getItem("userUUID")! as UUID, "item_categories")
-  })
+  const {status, error, data: categories} = useQuery(queryOptions["categories"])
 
   if (status === "pending") return <p>Loading...</p>
 
