@@ -1,4 +1,4 @@
-import Table from "../../components/Table/Table";
+import Table from "../../components/Table/Table.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
 
@@ -19,44 +19,44 @@ const Operations = (props: OperationsProps) => {
         requiredInputColumnTypes={{
           item_name: {
             type: ["string", "list"], 
-            inputPlaceholder: "default", 
+            placeholder: "default", 
             listQueryOptions: queryOptions["items"],
-            relatedKey: "name"
+            relatedColumnKey: "name"
           },
           unit_name: {
             type: ["string", "list"], 
-            inputPlaceholder: "auto", 
+            placeholder: "auto", 
             listQueryOptions: queryOptions["units"],
-            relatedKey: "name"
+            relatedColumnKey: "name"
           },
-          price_cents: {type: "number", inputPlaceholder: "auto"},
-          quantity: {type: "number", inputPlaceholder: "default"},
+          price_cents: {type: "number", placeholder: "auto"},
+          quantity: {type: "number", placeholder: "default"},
           addressee_entity_name: {
             type: ["string", "list"], 
-            inputPlaceholder: "default", 
+            placeholder: "default", 
             listQueryOptions: queryOptions["entities"],
-            relatedKey: "entity_name"
+            relatedColumnKey: "entity_name"
           },
           addressee_franchise_address: {
             type: ["string", "list"], 
-            inputPlaceholder: "default", 
+            placeholder: "default", 
             listQueryOptions: queryOptions["entities"],
-            relatedKey: "franchise_address"
+            relatedColumnKey: "franchise_address"
           },
           sendee_entity_name: {
             type: ["string", "list"], 
-            inputPlaceholder: "default", 
+            placeholder: "default", 
             listQueryOptions: queryOptions["entities"],
-            relatedKey: "entity_name"
+            relatedColumnKey: "entity_name"
           },
           sendee_franchise_address: {
             type: ["string", "list"], 
-            inputPlaceholder: "default", 
+            placeholder: "default", 
             listQueryOptions: queryOptions["entities"],
-            relatedKey: "franchise_address"
+            relatedColumnKey: "franchise_address"
           },
-          shipped_at: {type: Date, inputPlaceholder: "blank"},
-          arrived_at: {type: Date, inputPlaceholder: "blank"}
+          shipped_at: {type: Date, placeholder: "blank"},
+          arrived_at: {type: Date, placeholder: "blank"}
         }}
         renamedColumns={{
           item_name: "Item",

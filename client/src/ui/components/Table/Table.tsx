@@ -1,32 +1,23 @@
-import { useEffect, useRef, useState,  } from "react";
-import type { ChangeEvent, HTMLProps, MouseEvent, RefObject } from "react";
-import Checkbox from "../Checkbox/Checkbox";
 import "./table.css";
-import type { QueryKeysMapping, RouteTableMapping } from "@app/utils";
-import { useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import { useEffect, useRef, useState,  } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import type { ChangeEvent, HTMLProps, MouseEvent, RefObject } from "react";
+import type { TableData, InputDetail } from "./types";
 
-type Table = RouteTableMapping[keyof RouteTableMapping];
+import Checkbox from "../Checkbox/Checkbox";
 
-type Primitive = "string" | "number" | "boolean" | DateConstructor;
-
-type InputPlaceholder = "default" | "auto" | "blank";
-
-type InputDetail<T, O extends UseQueryOptions = any> = T extends [Primitive, "list"] ? 
-{type: T, inputPlaceholder: InputPlaceholder, listQueryOptions: O, relatedKey: /*change here*/string/*change here*/ } :
-{type: T, inputPlaceholder: InputPlaceholder};
-
-type TableProps<T extends Table> = {
+type TableProps<T extends TableData> = {
   dataArray: T[],
   title: string,
   requiredInputColumnTypes: {
-    [TableColumn in keyof T | (string & {})]?: InputDetail<Primitive | [Primitive, "list"]>
+    [Column in keyof T | (string & {})]?: InputDetail
   },
   renamedColumns: {
-    [TableColumn in keyof T | (string & {})]?: string
+    [Column in keyof T | (string & {})]?: string
   }
 } & HTMLProps<HTMLTableElement>
 
-const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, renamedColumns, ...props}: TableProps<T>) => {
+const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes, renamedColumns, ...props}: TableProps<T>) => {
   const selectAll = useRef<HTMLInputElement>(null);
   const rowSelectors = useRef<HTMLInputElement[]>([]);
   const tableBody = useRef<HTMLTableSectionElement>(null);
@@ -45,6 +36,12 @@ const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, re
   const updateModal = useRef<HTMLDialogElement>(null);
 
   const queryClient = useQueryClient();
+
+  const foreignData = Object.entries(requiredInputColumnTypes)
+    .filter(([key, value]) => "listQueryOptions" in value!)
+    .map(([key, value]) => {
+      return {key: key, query: ((value as any).listQueryOptions)}
+    })
 
   const selectAllItems = (e: ChangeEvent<HTMLInputElement, HTMLInputElement> | MouseEvent<HTMLTableHeaderCellElement | HTMLTableCellElement, globalThis.MouseEvent>) => {
     e.stopPropagation();
@@ -100,7 +97,7 @@ const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, re
     row!.toggleAttribute("selected");
 
     const i = Number(row?.dataset.index);
-
+    
     setSelectedItemIndexes(previousSelected => {
       const newSelected = new Int8Array(previousSelected);
 
@@ -156,24 +153,28 @@ const Table = <T extends Table,>({dataArray, title, requiredInputColumnTypes, re
     return data as any; 
   }
 
-  const modalInput = (key: string, detail: InputDetail<Primitive | [Primitive, "list"]>, operation: "insert" | "update") => {
+  const modalInput = (key: string, detail: InputDetail, operation: "insert" | "update") => {
     const dataType = detail.type instanceof Array ? detail.type[0] : detail.type;
 
     switch (dataType) {
       case "boolean": {
-        const checked = !(operation === "insert") || !(detail.inputPlaceholder === "auto") ? 
+        const checked = !(operation === "insert") || !(detail.placeholder === "auto") ? 
         false :
-        dataArray[selectedIndexes[0]][key as keyof Table];
+        dataArray[selectedIndexes[0]][key as keyof TableData];
 
         return <Checkbox name={key} id={key} checked={checked}/>
       }
       case "number":
         return <input type="number" name={key} id={key} />
       case "string": {
-        if (detail.type instanceof Array) {
-          const queryKey = (detail as any).type.listQueryKey;
+        if ("listQueryOptions" in detail) {
+          // const column = detail.relatedColumnKey;
           
-          // TODO: FIX THIS SHIT!
+          // // TODO: FIX THIS SHIT!
+
+          // const data = queryClient.fetchQuery(detail.listQueryOptions);
+
+          // data.then(res => console.log(res));
 
           return;
         }
