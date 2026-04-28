@@ -41,7 +41,7 @@ const Operations = (props: OperationsProps) => {
             type: ["string", "list"], 
             placeholder: "default", 
             listQueryOptions: queryOptions["entities"],
-            relatedColumnKey: "franchise_address"
+            relatedColumnKey: "address"
           },
           sendee_entity_name: {
             type: ["string", "list"], 
@@ -53,7 +53,7 @@ const Operations = (props: OperationsProps) => {
             type: ["string", "list"], 
             placeholder: "default", 
             listQueryOptions: queryOptions["entities"],
-            relatedColumnKey: "franchise_address"
+            relatedColumnKey: "address"
           },
           shipped_at: {type: Date, placeholder: "blank"},
           arrived_at: {type: Date, placeholder: "blank"}

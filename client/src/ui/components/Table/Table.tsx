@@ -5,6 +5,7 @@ import type { ChangeEvent, HTMLProps, MouseEvent, RefObject } from "react";
 import type { TableData, InputDetail } from "./types";
 
 import Checkbox from "../Checkbox/Checkbox";
+import QueriedDropdown from "../QueriedDropdown/QueriedDropdown";
 
 type TableProps<T extends TableData> = {
   dataArray: T[],
@@ -168,15 +169,9 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
         return <input type="number" name={key} id={key} />
       case "string": {
         if ("listQueryOptions" in detail) {
-          // const column = detail.relatedColumnKey;
-          
-          // // TODO: FIX THIS SHIT!
+          const {listQueryOptions: queryOptions, relatedColumnKey: column} = detail;
 
-          // const data = queryClient.fetchQuery(detail.listQueryOptions);
-
-          // data.then(res => console.log(res));
-
-          return;
+          return <QueriedDropdown queryOptions={queryOptions} column={column} />;
         }
 
         return <input type="text" name={key} id={key} />

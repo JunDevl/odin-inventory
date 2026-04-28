@@ -102,9 +102,12 @@ export namespace TableTypes {
   }
 }
 
-export type DataQueryKeys = "operations" | "units" | "categories" | "items" | "entities"
+export type DataQueryKeys = "operations" | "units" | "categories" | "items" | "entities";
 
-type ExhaustiveMapping<R extends string, T extends Record<R, unknown>> = T;
+type ExhaustiveMapping<R extends string, T extends Record<R, unknown>> =
+  Exclude<R, keyof T> extends never
+    ? T
+    : never;
 
 export type RouteTableMapping = ExhaustiveMapping<DataRoute, {
   operations: TableTypes.Operation,

@@ -11,7 +11,7 @@ export const validateUser = async (email: string, password: string) => {
   const userUUID = await data.text();
   
   if (!data.ok) throw new Error(userUUID);
-
+  
   return userUUID;
 }
 

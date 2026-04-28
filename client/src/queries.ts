@@ -29,4 +29,4 @@ export const queryOptions = {
     queryFn: () => fetchAll(localStorage.getItem("userUUID")! as UUID, "entities"),
     staleTime: Infinity
   },
-} satisfies { [k in DataQueryKeys]: UseQueryOptions & {queryKey: [DataQueryKeys]} } as const;
+} satisfies { [k in DataQueryKeys]: UseQueryOptions & { queryKey: [k] } };
