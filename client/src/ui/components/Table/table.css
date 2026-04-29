@@ -75,18 +75,17 @@ table {
     border-right: 1px solid var(--gray-2);
     border-bottom: 1px solid var(--gray-1);
 
+    &.selectable {
+      white-space: nowrap;
+      width: 1%;
+    }
+
     &.selectable:hover {
       cursor: pointer;
 
       & *:hover {
         cursor: pointer;
       }
-    }
-
-    &.selectable>div {
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
   }
 

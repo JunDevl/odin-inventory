@@ -17,8 +17,8 @@ const AvaliableItems = (props: ItemsProps) => {
         title="Avaliable Items" 
         dataArray={items}
         requiredInputColumnTypes={{
-          name: {type: "string", inputPlaceholder: "default"},
-          description: {type: "string", inputPlaceholder: "blank"}
+          name: {type: "string", placeholder: "blank"},
+          description: {type: "string", placeholder: "blank", notMandatory: true}
         }}
         renamedColumns={{
           name: "Item Name",

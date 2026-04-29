@@ -1,11 +1,10 @@
 import "./table.css";
 import { useEffect, useRef, useState,  } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import type { ChangeEvent, HTMLProps, MouseEvent, RefObject } from "react";
+import type { ChangeEvent, HTMLProps, MouseEvent } from "react";
 import type { TableData, InputDetail } from "./types";
 
 import Checkbox from "../Checkbox/Checkbox";
-import QueriedDropdown from "../QueriedDropdown/QueriedDropdown";
+import Modal from "../Modal/Modal";
 
 type TableProps<T extends TableData> = {
   dataArray: T[],
@@ -35,14 +34,6 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
   const [modal, setModal] = useState<null | "insert" | "update">(null);
   const insertModal = useRef<HTMLDialogElement>(null);
   const updateModal = useRef<HTMLDialogElement>(null);
-
-  const queryClient = useQueryClient();
-
-  const foreignData = Object.entries(requiredInputColumnTypes)
-    .filter(([key, value]) => "listQueryOptions" in value!)
-    .map(([key, value]) => {
-      return {key: key, query: ((value as any).listQueryOptions)}
-    })
 
   const selectAllItems = (e: ChangeEvent<HTMLInputElement, HTMLInputElement> | MouseEvent<HTMLTableHeaderCellElement | HTMLTableCellElement, globalThis.MouseEvent>) => {
     e.stopPropagation();
@@ -107,10 +98,6 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
       return newSelected;
     });
   }
-
-  const closeModal = (modal: RefObject<HTMLDialogElement | null>) => {
-    modal.current!.close();
-  }
   
   useEffect(() => {
     if (!modal) return;
@@ -154,67 +141,25 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
     return data as any; 
   }
 
-  const modalInput = (key: string, detail: InputDetail, operation: "insert" | "update") => {
-    const dataType = detail.type instanceof Array ? detail.type[0] : detail.type;
-
-    switch (dataType) {
-      case "boolean": {
-        const checked = !(operation === "insert") || !(detail.placeholder === "auto") ? 
-        false :
-        dataArray[selectedIndexes[0]][key as keyof TableData];
-
-        return <Checkbox name={key} id={key} checked={checked}/>
-      }
-      case "number":
-        return <input type="number" name={key} id={key} />
-      case "string": {
-        if ("listQueryOptions" in detail) {
-          const {listQueryOptions: queryOptions, relatedColumnKey: column} = detail;
-
-          return <QueriedDropdown queryOptions={queryOptions} column={column} />;
-        }
-
-        return <input type="text" name={key} id={key} />
-      }
-      case Date:
-        return <input type="datetime-local" name={key} id={key} />
-      default:
-        return <input type="text" name={key} id={key} />
-    }
-  }
-
   return (
     <>
-      <dialog id="insert" ref={insertModal} onClose={() => setModal(null)}>
-        <p>Insert new</p>
-        <form action="POST">
-          <ul>
-            {Object.entries(requiredInputColumnTypes).map(([key, value]) => 
-              <li key={key}>
-                <label htmlFor={key}>{renamedColumns[key]}</label>
-                {modalInput(key, value!, "insert")}
-              </li>
-            )}
-          </ul>
-          <button type="submit">Submit</button>
-        </form>
-        <button className="close" onClick={() => closeModal(insertModal)}>close</button>
-      </dialog>
-      <dialog id="update" ref={updateModal} onClose={() => setModal(null)}>
-        <p>Edit</p>
-        <form action="PUT">
-          <ul>
-            {Object.entries(requiredInputColumnTypes).map(([key, value]) => 
-              <li key={key}>
-                <label htmlFor={key}>{renamedColumns[key]}</label>
-                {modalInput(key, value!, "update")}
-              </li>
-            )}
-          </ul>
-          <button type="submit">Submit</button>
-        </form>
-        <button className="close" onClick={() => closeModal(updateModal)}>close</button>
-      </dialog>
+      <Modal 
+        id="insert"
+        ref={insertModal}
+        details={requiredInputColumnTypes} 
+        columns={renamedColumns} 
+        operation="insert" 
+        onClose={() => setModal(null)}
+      />
+      <Modal
+        id="update"
+        ref={updateModal}
+        details={requiredInputColumnTypes} 
+        columns={renamedColumns} 
+        operation="update"
+        selectedItem={dataArray[selectedIndexes[0]]}
+        onClose={() => setModal(null)}
+      />
       <h1>{title}</h1>
       <div className="table">
         <div className="table-utils">
@@ -256,14 +201,14 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
             <thead>
               <tr>
                 <th scope="col" onClickCapture={selectAllItems} className="selectable" >
-                  <div>
+
                     <Checkbox 
                       name="all" 
                       id="all" 
                       ref={selectAll}
                       onChange={selectAllItems}
                     />
-                  </div>
+
                 </th>
                 {Object.values(renamedColumns).map(col => 
                   <th scope="col" key={col}>
@@ -276,7 +221,7 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
               {dataArray.map((_, index) =>
                 <tr id={`row${index+1}`} key={`row${index+1}`} data-index={index}>
                   <th scope="row" onClickCapture={selectItem} className="selectable">
-                    <div>
+
                       <Checkbox 
                         ref={element => {rowSelectors.current[index] = element as HTMLInputElement}}
                         name={`select${index}`}
@@ -284,7 +229,7 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
                         className="select"
                         onChange={selectItem}
                       />
-                    </div>
+
                   </th>
                   {Object.keys(renamedColumns).map((key) =>
                     <td key={key}>

@@ -5,11 +5,12 @@ export type TableData = RouteTableMapping[keyof RouteTableMapping];
 
 type Primitive = "string" | "number" | "boolean" | DateConstructor;
 type InputTypeAttribute = Primitive | [Primitive, "list"];
-type PlaceholderBehavior = "default" | "auto" | "blank";
+type PlaceholderBehavior = "blank" | "auto";
 
 type InputType<T extends InputTypeAttribute> = {
   type: T,
-  placeholder: PlaceholderBehavior
+  placeholder: PlaceholderBehavior,
+  notMandatory?: boolean
 };
 
 type InputQueryable = {

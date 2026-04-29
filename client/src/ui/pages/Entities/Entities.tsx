@@ -17,10 +17,10 @@ const Entities = (props: EntitiesProps) => {
         title="Entities" 
         dataArray={entities}
         requiredInputColumnTypes={{
-          entity_name: {type: "string", inputPlaceholder: "default"},
-          trade: {type: "string", inputPlaceholder: "blank"},
-          address: {type: "string", inputPlaceholder: "default"},
-          type: {type: "string", inputPlaceholder: "default"}
+          entity_name: {type: "string", placeholder: "blank"},
+          trade: {type: "string", placeholder: "blank", notMandatory: true},
+          address: {type: "string", placeholder: "blank"},
+          type: {type: "string", placeholder: "blank"}
         }}
         renamedColumns={{
           entity_name: "Name",

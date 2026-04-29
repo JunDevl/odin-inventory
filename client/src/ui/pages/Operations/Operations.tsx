@@ -19,7 +19,7 @@ const Operations = (props: OperationsProps) => {
         requiredInputColumnTypes={{
           item_name: {
             type: ["string", "list"], 
-            placeholder: "default", 
+            placeholder: "blank", 
             listQueryOptions: queryOptions["items"],
             relatedColumnKey: "name"
           },
@@ -30,33 +30,33 @@ const Operations = (props: OperationsProps) => {
             relatedColumnKey: "name"
           },
           price_cents: {type: "number", placeholder: "auto"},
-          quantity: {type: "number", placeholder: "default"},
+          quantity: {type: "number", placeholder: "blank"},
           addressee_entity_name: {
             type: ["string", "list"], 
-            placeholder: "default", 
+            placeholder: "blank", 
             listQueryOptions: queryOptions["entities"],
             relatedColumnKey: "entity_name"
           },
           addressee_franchise_address: {
             type: ["string", "list"], 
-            placeholder: "default", 
+            placeholder: "blank", 
             listQueryOptions: queryOptions["entities"],
             relatedColumnKey: "address"
           },
           sendee_entity_name: {
             type: ["string", "list"], 
-            placeholder: "default", 
+            placeholder: "blank", 
             listQueryOptions: queryOptions["entities"],
             relatedColumnKey: "entity_name"
           },
           sendee_franchise_address: {
             type: ["string", "list"], 
-            placeholder: "default", 
+            placeholder: "blank", 
             listQueryOptions: queryOptions["entities"],
             relatedColumnKey: "address"
           },
-          shipped_at: {type: Date, placeholder: "blank"},
-          arrived_at: {type: Date, placeholder: "blank"}
+          shipped_at: {type: Date, placeholder: "blank", notMandatory: true},
+          arrived_at: {type: Date, placeholder: "blank", notMandatory: true}
         }}
         renamedColumns={{
           item_name: "Item",

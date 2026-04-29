@@ -17,9 +17,9 @@ const ItemUnits = (props: UnitsProps) => {
         title="Item Units" 
         dataArray={units}
         requiredInputColumnTypes={{
-          name: {type: "string", inputPlaceholder: "default"},
-          description: {type: "string", inputPlaceholder: "blank"},
-          wikipedia_url: {type: "string", inputPlaceholder: "blank"}
+          name: {type: "string", placeholder: "blank"},
+          description: {type: "string", placeholder: "blank", notMandatory: true},
+          wikipedia_url: {type: "string", placeholder: "blank", notMandatory: true}
         }}
         renamedColumns={{
           name: "Unit Name",
