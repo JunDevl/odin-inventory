@@ -216,108 +216,92 @@ export const insertUserOperation = async ({
 
   const {entityName: sendeeEntityName, franchiseAddress: sendeeFranchiseAddress} = sendee;
 
-  let shippedAtQuery;
-  let arrivedAtQuery;
-
-  if (!(shippedAt instanceof Date)) shippedAtQuery = shippedAt === null ? "NULL" : "DEFAULT";
-  else shippedAtQuery = Number(shippedAt);
-
-  if (!(arrivedAt instanceof Date)) arrivedAtQuery = arrivedAt === null ? "NULL" : "DEFAULT";
-  else arrivedAtQuery = Number(arrivedAt);
-
-  const createdOperationQuery = (priceHistoryId: string) => `
+  const priceHistory = await handleError(priceCents ? sql`
       INSERT INTO 
-      operations (
-        user_id, 
-        item_user_id, 
-        item_name,
-        unit_price_user_id,
-        unit_price_item_name,
-        unit_price_id,
-        quantity,
-        adressee_user_id,
-        adressee_entity_name,
-        adressee_franchise_addres,
-        sendee_user_id,
-        sendee_entity_name,
-        sendee_franchise_address,
-        shipped_at
-        arrived_at
-      )
-      VALUES (
-        ${userUuid},
-        ${userUuid},
-        ${itemName},
-        ${userUuid},
-        ${itemName},
-        ${priceHistoryId},
-        ${quantity},
-        ${userUuid},
-        ${addresseeEntityName},
-        ${adresseeFranchiseAddress},
-        ${userUuid},
-        ${sendeeEntityName},
-        ${sendeeFranchiseAddress},
-        ${shippedAtQuery}
-        ${arrivedAtQuery}
-      )
-    `;
-
-  let created;
-
-  if (priceCents) {
-    const insertedHistory = await handleError(sql`
-      INSERT INTO 
-      items_unit_price_history (user_id, item_id, unit_user_id, unit_name, price_cents)
+      items_unit_price_history (item_user_id, item_name, unit_user_id, unit_name, price_cents)
       VALUES (${userUuid}, ${itemName}, ${userUuid}, ${unit}, ${priceCents})
       RETURNING history_id;
-    `)
-
-    if (insertedHistory instanceof PromiseError) {
-      await sql`ROLLBACK`
-      throw new Error(insertedHistory.error);
-    }
-
-    const [row] = insertedHistory;
-    const {history_id} = row!;
-
-    created = await handleError(sql`${createdOperationQuery(history_id)}`);
-
-    if (created instanceof PromiseError) {
-      await sql`ROLLBACK`;
-      throw new Error(created.error);
-    }
-
-    return created;
-  } else {
-    const lastPrice = await handleError(sql`SELECT (history_id) FROM (
+    ` :
+    sql`SELECT (history_id) FROM (
       SELECT MAX(priced_at) FROM items_unit_price_history
       WHERE user_id = ${userUuid}
       AND item_id = ${itemName}
-    )`)
+  )`)
 
-    if (lastPrice instanceof PromiseError) throw new Error(lastPrice.error);
-
-    const [row] = lastPrice;
-
-    if (!row) throw new Error("No price was registered for the specified item.")
-
-    const {history_id} = row;
-
-    created = await handleError(sql`${createdOperationQuery(history_id)}`);
-
-    if (created instanceof PromiseError) throw new Error(created.error);
-
-    return created;
+  if (priceHistory instanceof PromiseError) {
+    await sql`ROLLBACK`
+    throw new Error(priceHistory.error);
   }
+
+  const [row] = priceHistory;
+
+  if (!row) throw new Error("No price was registered for the specified item.")
+
+  const {history_id} = row;
+
+  const priceHistoryID = history_id;
+
+  const created = await handleError(sql`
+    INSERT INTO 
+    operations (
+      user_id, 
+      item_user_id, 
+      item_name,
+      unit_price_user_id,
+      unit_price_item_name,
+      unit_price_id,
+      quantity,
+      addressee_user_id,
+      addressee_entity_name,
+      addressee_franchise_address,
+      sendee_user_id,
+      sendee_entity_name,
+      sendee_franchise_address,
+      shipped_at,
+      arrived_at
+    )
+    VALUES (
+      ${userUuid},
+      ${userUuid},
+      ${itemName},
+      ${userUuid},
+      ${itemName},
+      ${priceHistoryID},
+      ${quantity},
+      ${userUuid},
+      ${addresseeEntityName},
+      ${adresseeFranchiseAddress},
+      ${userUuid},
+      ${sendeeEntityName},
+      ${sendeeFranchiseAddress},
+      ${shippedAt ?? null},
+      ${arrivedAt ?? null}
+    )
+  `);
+
+  if (created instanceof PromiseError) {
+    await sql`ROLLBACK`;
+    throw new Error(created.error);
+  }
+  
+  return created;
+}
+
+export const deleteUserOperation = async(userUuid: UUID, operationId: number) => {
+  const deleted = await handleError(sql`
+    DELETE FROM operations
+    WHERE user_id = ${userUuid}
+    AND operation_id = ${operationId}
+  `)
+  
+  if (deleted instanceof PromiseError) throw new Error(deleted.error);
+
+  return deleted;
 }
 
 const joinAllOperationsQuery = 
   `JOIN items i ON CONCAT(i.user_id, name) = CONCAT(operations.user_id, operations.item_name)
-  JOIN items_unit_price_history p ON CONCAT(p.item_user_id, p.item_name, history_id) = CONCAT(operations.user_id, operations.unit_price_item_name, operations.unit_price_id)
-  JOIN entities_franchises f
-    ON CONCAT(f.entity_user_id, f.entity_name, f.address) = CONCAT(operations.user_id, operations.addressee_entity_name, operations.addressee_franchise_address)
-    OR CONCAT(f.entity_user_id, f.entity_name, f.address) = CONCAT(operations.user_id, operations.sendee_entity_name, operations.sendee_franchise_address)`
+  JOIN items_unit_price_history p ON CONCAT(p.item_user_id, p.item_name, history_id) = CONCAT(operations.user_id, operations.unit_price_item_name, operations.unit_price_id)`
 
 export const retrieveUserOperation = async (userUuid: UUID, operationId: number, joinAll?: boolean) => {
   const operation = await handleError(
@@ -346,15 +330,24 @@ export const retrieveAllUserOperation = async (userUuid: UUID, joinAll?: boolean
   return operations;
 }
 
-export const insertUserItem = async ({userUuid, name, description}: APICreateUpdateParams["avaliable_items"]) => {
-  const created = await handleError(sql`
+export const insertUserItem = async ({userUuid, name, description, categoryName}: APICreateUpdateParams["avaliable_items"]) => {
+  const createdItem = await handleError(sql`
     INSERT INTO items (user_id, name, description)
     VALUES (${userUuid}, ${name}, ${description ?? "NULL"})
-  `)
+  `);
 
-  if (created instanceof PromiseError) throw new Error(created.error);
+  if (categoryName) {
+    const categoryAdded = await handleError(sql`
+      INSERT INTO categories_of_items (item_user_id, item_name, category_user_id, category_name)
+      VALUES (${userUuid}, ${name}, ${userUuid}, ${categoryName})
+    `);
 
-  return created;
+    if (categoryAdded instanceof PromiseError) throw new Error(categoryAdded.error);
+  }
+
+  if (createdItem instanceof PromiseError) throw new Error(createdItem.error);
+
+  return createdItem;
 }
 
 const joinItemCategoryQuery = 
@@ -386,18 +379,7 @@ export const retrieveAllUserItems = async (userUuid: UUID, joinCategory?: boolea
 export const insertUserItemCategory = async ({userUuid, name, description}: APICreateUpdateParams["item_categories"]) => {
   const created = await handleError(sql`
     INSERT INTO item_categories (user_id, name, description)
-    VALUES (${userUuid}, ${name}, ${description ?? "NULL"})
-  `)
-
-  if (created instanceof PromiseError) throw new Error(created.error);
-
-  return created;
-}
-
-export const addUserCategoryToItem = async (userUuid: UUID, itemName: string, categoryName: string) => {
-  const created = await handleError(sql`
-    INSERT INTO categories_of_items (item_user_id, item_id, category_user_id, category_id)
-    VALUES (${userUuid}, ${itemName}, ${userUuid}, ${categoryName})
+    VALUES (${userUuid}, ${name}, ${description ?? null})
   `)
 
   if (created instanceof PromiseError) throw new Error(created.error);
@@ -431,7 +413,7 @@ export const retrieveAllUserItemCategories = async (userUuid: UUID) => {
 export const insertUserItemUnit = async ({userUuid, name, description, wikipediaUrl}: APICreateUpdateParams["item_units"]) => {
   const created = await handleError(sql`
     INSERT INTO item_units (user_id, name, description, wikipedia_url)
-    VALUES (${userUuid}, ${name}, ${description ?? "NULL"}, ${wikipediaUrl ?? "NULL"})
+    VALUES (${userUuid}, ${name}, ${description ?? null}, ${wikipediaUrl ?? null})
   `)
 
   if (created instanceof PromiseError) throw new Error(created.error);
@@ -465,7 +447,7 @@ export const retrieveAllUserItemUnits = async (userUuid: UUID) => {
 export const insertUserEntityFranchise = async ({userUuid, name, address, trade}: APICreateUpdateParams["entities"]) => {
   const createdEntity = await handleError(sql`
     INSERT INTO entities (user_id, name, trade)
-    VALUES (${userUuid}, ${name}, ${trade ?? "NULL"})
+    VALUES (${userUuid}, ${name}, ${trade ?? null})
     RETURNING entity_id
   `)
 
@@ -489,11 +471,11 @@ export const insertUserEntityFranchise = async ({userUuid, name, address, trade}
 }
 
 const joinFranchiseOfType = 
-  `JOIN outsourced_entity_franchise_types t ON CONCAT(t.franchise_user_id, t.entity_name, t.franchise_address) = CONCAT(f.entity_user_id, f.entity_name, f.address)`
+  `LEFT JOIN outsourced_entity_franchise_types t ON CONCAT(t.franchise_user_id, t.entity_name, t.franchise_address) = CONCAT(f.entity_user_id, f.entity_name, f.address)`
 
 export const retrieveUserEntityFranchise = async (userUuid: UUID, entityName: string, address: string, joinType?: boolean) => {
   const entityFranchise = await handleError(sql`
-    SELECT * FROM entities
+    SELECT entities.*, f.*, t.type FROM entities
     JOIN entities_franchises f ON CONCAT(f.entity_user_id, f.entity_name, f.address) = CONCAT(entities.user_id, entities.entity_name, ${address})
     ${joinType ? sql.unsafe(joinFranchiseOfType) : sql.unsafe("")}
     WHERE user_id = ${userUuid}
@@ -507,7 +489,7 @@ export const retrieveUserEntityFranchise = async (userUuid: UUID, entityName: st
 
 export const retrieveAllUserEntityFranchises = async (userUuid: UUID, joinType?: boolean) => {
   const entitiesFranchises = await handleError(sql`
-    SELECT * FROM entities
+    SELECT entities.*, f.*, t.type FROM entities
     JOIN entities_franchises f 
     ON CONCAT(f.entity_user_id, f.entity_name) = CONCAT(entities.user_id, entities.name)
     ${joinType ? sql.unsafe(joinFranchiseOfType) : sql.unsafe("")}

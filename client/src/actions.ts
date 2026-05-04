@@ -1,5 +1,18 @@
 import type { UUID } from "node:crypto";
-import type { DataRoute, APICreateUpdateParams, RouteTableMapping } from "@app/utils";
+import type { DataRoute, APICreateUpdateParams, RouteTableMapping, Prettify } from "@app/utils";
+
+const dataRouteURI = (route: DataRoute, userID: UUID) => {
+  let uri;
+
+  if (route.includes("item")) {
+    const itemRoute = route === "avaliable_items" ? "avaliable" : route === "item_categories" ? "categories" : "units"
+
+    uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/items/${itemRoute}`;
+  }
+  else uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/${route}`;
+
+  return uri;
+}
 
 const postHeaders: HeadersInit = {
   'content-type': "application/json"
@@ -34,16 +47,11 @@ export const createNewUser = async (username: string, email: string, password: s
   return createdUserUUID;
 }
 
-export const fetchAll = async <T extends DataRoute>(userID: UUID, route: T) => {
-  let uri;
+export const fetchAll = async <T extends DataRoute>(route: T) => {
+  const userID = localStorage.getItem("userUUID") as UUID;
+
+  const uri = dataRouteURI(route, userID);
   let res: Record<string, any>[];
-
-  if (route.includes("item")) {
-    const itemRoute = route === "avaliable_items" ? "avaliable" : route === "item_categories" ? "categories" : "units"
-
-    uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/items/${itemRoute}`;
-  }
-  else uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/${route}`;
 
   const data = await fetch(uri);
 
@@ -56,7 +64,7 @@ export const fetchAll = async <T extends DataRoute>(userID: UUID, route: T) => {
 
   for (const item of res) {
     for (const k of Object.keys(item)) {
-      if (item[k] === null || !k.includes("date") || !k.includes("datetime") || !k.includes("at")) continue;
+      if (item[k] === null || !k.includes("date") && !k.includes("datetime") && !k.includes("_at")) continue;
       item[k] = new Date(item[k]);
     }
   }
@@ -64,16 +72,17 @@ export const fetchAll = async <T extends DataRoute>(userID: UUID, route: T) => {
   return res as RouteTableMapping[typeof route][];
 }
 
-export const create = async <T extends DataRoute>(userID: UUID, route: T, params: APICreateUpdateParams[T]) => {
-  const body = JSON.stringify(params);
-  let uri;
-  
-  if (route.includes("item")) {
-    const itemRoute = route === "avaliable_items" ? "avaliable" : route === "item_categories" ? "categories" : "units"
+type CUDParams<T extends DataRoute> = Omit<APICreateUpdateParams[T], "userUuid">;
 
-    uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/items/${itemRoute}`;
-  }
-  else uri = `${import.meta.env["VITE_API_URI"]!}/${userID}/${route}`;
+export const createData = async <T extends DataRoute>(route: T, params: CUDParams<T>) => {
+  const userID = localStorage.getItem("userUUID") as UUID;
+
+  Object.keys(params).forEach(paramKey => {
+    if (paramKey.includes("cents")) (params[paramKey as keyof typeof params] as number) *= 100;
+  })
+
+  const body = JSON.stringify({userUuid: userID, ...params});
+  const uri = dataRouteURI(route, userID);
 
   const postData = await fetch(uri, { 
     method: "POST", 
@@ -83,11 +92,15 @@ export const create = async <T extends DataRoute>(userID: UUID, route: T, params
 
   if (!postData.ok) throw new Error(await postData.text());
 
-  const created = await postData.text();
+  const createdOK = await postData.text();
 
-  return created;
+  return createdOK;
 }
 
-export const update = async (userID: UUID, route: DataRoute) => {
+export const updateData = async <T extends DataRoute>(route: T, params: CUDParams<T>) => {
+  
+}
+
+export const deleteDataArray = async <T extends DataRoute>(route: T, params: CUDParams<T>[]) => {
   
 }

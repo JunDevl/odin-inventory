@@ -5,19 +5,21 @@ import type { TableData, InputDetail } from "./types";
 
 import Checkbox from "../Checkbox/Checkbox";
 import Modal from "../Modal/Modal";
+import type { DataRoute } from "@app/utils";
 
 type TableProps<T extends TableData> = {
   dataArray: T[],
   title: string,
+  dataRoute: DataRoute,
   requiredInputColumnTypes: {
-    [Column in keyof T | (string & {})]?: InputDetail
+    [TableColumn in keyof T]?: InputDetail
   },
   renamedColumns: {
-    [Column in keyof T | (string & {})]?: string
+    [RequiredColumn in keyof TableProps<T>["requiredInputColumnTypes"]]: string
   }
 } & HTMLProps<HTMLTableElement>
 
-const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes, renamedColumns, ...props}: TableProps<T>) => {
+const Table = <T extends TableData,>({dataArray, title, dataRoute, requiredInputColumnTypes, renamedColumns, ...props}: TableProps<T>) => {
   const selectAll = useRef<HTMLInputElement>(null);
   const rowSelectors = useRef<HTMLInputElement[]>([]);
   const tableBody = useRef<HTMLTableSectionElement>(null);
@@ -98,19 +100,6 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
       return newSelected;
     });
   }
-  
-  useEffect(() => {
-    if (!modal) return;
-
-    switch(modal) {
-      case "insert":
-        insertModal.current!.showModal();
-        break;
-      case "update":
-        updateModal.current!.showModal();
-        break;
-    }
-  }, [modal])
 
   const showCellData = (index: number, key: keyof T) => {
     const data = dataArray[index][key];
@@ -127,9 +116,7 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
       return dollarFormat.format(dollar);
     }
 
-    if ((key as string).includes("url")) {
-      return <a href={data as string} target="_blank">{data as any}</a>
-    }
+    if ((key as string).includes("url")) return <a href={data as string} target="_blank">{data as any}</a>;
 
     if ((key as string) === "type") {
       return (data as string)
@@ -141,6 +128,25 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
     return data as any; 
   }
 
+  const deleteRows = () => {
+    
+  }
+  
+  useEffect(() => {
+    if (!modal) return;
+
+    switch(modal) {
+      case "insert":
+        insertModal.current!.showModal();
+        break;
+      case "update":
+        updateModal.current!.showModal();
+        break;
+    }
+  }, [modal])
+
+  useEffect(() => setSelectedItemIndexes(new Int8Array(dataArray.length).fill(0)), [dataArray])
+
   return (
     <>
       <Modal 
@@ -148,6 +154,7 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
         ref={insertModal}
         details={requiredInputColumnTypes} 
         columns={renamedColumns} 
+        route={dataRoute}
         operation="insert" 
         onClose={() => setModal(null)}
       />
@@ -156,6 +163,7 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
         ref={updateModal}
         details={requiredInputColumnTypes} 
         columns={renamedColumns} 
+        route={dataRoute}
         operation="update"
         selectedItem={dataArray[selectedIndexes[0]]}
         onClose={() => setModal(null)}
@@ -211,8 +219,8 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
 
                 </th>
                 {Object.values(renamedColumns).map(col => 
-                  <th scope="col" key={col}>
-                    {col}
+                  <th scope="col" key={col as string}>
+                    {col as string}
                   </th>
                 )}
               </tr>
@@ -221,15 +229,13 @@ const Table = <T extends TableData,>({dataArray, title, requiredInputColumnTypes
               {dataArray.map((_, index) =>
                 <tr id={`row${index+1}`} key={`row${index+1}`} data-index={index}>
                   <th scope="row" onClickCapture={selectItem} className="selectable">
-
-                      <Checkbox 
-                        ref={element => {rowSelectors.current[index] = element as HTMLInputElement}}
-                        name={`select${index}`}
-                        id={`select${index}`}
-                        className="select"
-                        onChange={selectItem}
-                      />
-
+                    <Checkbox 
+                      ref={element => {rowSelectors.current[index] = element as HTMLInputElement}}
+                      name={`select${index}`}
+                      id={`select${index}`}
+                      className="select"
+                      onChange={selectItem}
+                    />
                   </th>
                   {Object.keys(renamedColumns).map((key) =>
                     <td key={key}>

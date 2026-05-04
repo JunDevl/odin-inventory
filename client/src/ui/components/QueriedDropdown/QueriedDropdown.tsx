@@ -1,16 +1,16 @@
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
 import type { HTMLProps, JSX } from "react";
-import type { DataQueryKeys, QueryKeysMapping } from "@app/utils";
+import type { DataRoute, RouteTableMapping } from "@app/utils";
 
 type DropdownProps<T extends (typeof queryOptions)[keyof typeof queryOptions]> = HTMLProps<HTMLSelectElement> & {
   queryOptions: T,
   column: {
-    [K in DataQueryKeys]: keyof QueryKeysMapping[K]
+    [K in DataRoute]: keyof RouteTableMapping[K]
   }[T["queryKey"][0]]
 }
 
-const QueriedDropdown = <T extends (typeof queryOptions)[keyof typeof queryOptions],>({queryOptions, column, ...props}: DropdownProps<T>) => {
+const QueriedDropdown = <T extends (typeof queryOptions)[keyof typeof queryOptions],>({queryOptions, column, defaultValue, required, ...props}: DropdownProps<T>) => {
   const {status, data, error} = useQuery(queryOptions as UseQueryOptions);
 
   const renderOnStatus = () => {
@@ -30,7 +30,8 @@ const QueriedDropdown = <T extends (typeof queryOptions)[keyof typeof queryOptio
   }
 
   return (
-    <select {...props} >
+    <select {...props} required={required} defaultValue={!required ? "" : undefined}>
+      {!required && <option value=""></option>}
       {renderOnStatus()}
     </select>
   )

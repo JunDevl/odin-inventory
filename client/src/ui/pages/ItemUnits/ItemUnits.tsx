@@ -1,11 +1,14 @@
 import Table from "../../components/Table/Table";
 import { useQuery } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
+import type { DataRoute } from "@app/utils";
 
 type UnitsProps = {}
 
 const ItemUnits = (props: UnitsProps) => {
-  const {status, error, data: units} = useQuery(queryOptions["units"])
+  const route: DataRoute = "item_units";
+
+  const {status, error, data: units} = useQuery(queryOptions[route])
 
   if (status === "pending") return <p>Loading...</p>
 
@@ -16,6 +19,7 @@ const ItemUnits = (props: UnitsProps) => {
       <Table 
         title="Item Units" 
         dataArray={units}
+        dataRoute={route}
         requiredInputColumnTypes={{
           name: {type: "string", placeholder: "blank"},
           description: {type: "string", placeholder: "blank", notMandatory: true},

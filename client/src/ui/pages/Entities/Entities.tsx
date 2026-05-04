@@ -1,11 +1,14 @@
 import Table from "../../components/Table/Table"
 import { useQuery } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
+import type { DataRoute } from "@app/utils";
 
 type EntitiesProps = {}
 
 const Entities = (props: EntitiesProps) => {
-  const {status, error, data: entities} = useQuery(queryOptions["entities"])
+  const route: DataRoute = "entities"
+
+  const {status, error, data: entities} = useQuery(queryOptions[route])
 
   if (status === "pending") return <p>Loading...</p>
 
@@ -16,6 +19,7 @@ const Entities = (props: EntitiesProps) => {
       <Table 
         title="Entities" 
         dataArray={entities}
+        dataRoute={route}
         requiredInputColumnTypes={{
           entity_name: {type: "string", placeholder: "blank"},
           trade: {type: "string", placeholder: "blank", notMandatory: true},

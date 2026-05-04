@@ -24,14 +24,14 @@ export type Prettify<T> = {
 
 export type EntityType = "service_provider" | "supplier" | "client";
 
-type EntityFranchiseID = {entityName: string, franchiseAddress: string};
+export type EntityFranchise = {entityName: string, franchiseAddress: string};
 
 export type APICreateUpdateParams = {
   operations: {
     userUuid: UUID,
-    addressee: EntityFranchiseID,
-    sendee: EntityFranchiseID,
-    itemName: string, 
+    addressee: EntityFranchise,
+    sendee: EntityFranchise,
+    itemName: string,
     quantity: number,
     unit: string,
     priceCents: number,
@@ -40,14 +40,14 @@ export type APICreateUpdateParams = {
   },
 
   entities: {
-    userUuid: UUID, 
+    userUuid: UUID,
     name: string,
     address: string,
     type: string,
     trade?: string
   },
 
-  avaliable_items: {userUuid: UUID, name: string, description?: string},
+  avaliable_items: {userUuid: UUID, name: string, description?: string, categoryName?: string},
 
   item_categories: {userUuid: UUID, name: string, description?: string},
 
@@ -82,7 +82,8 @@ export namespace TableTypes {
   export type Item = {
     user_id: UUID,
     name: string,
-    description: string | null
+    description: string | null,
+    category_name: string | null
   }
 
   export type Operation = {
@@ -90,6 +91,7 @@ export namespace TableTypes {
     operation_id: number,
     item_name: string,
     unit_price_id: number,
+    unit_name: string,
     price_cents: number,
     total_price_cents: number,
     quantity: number,
@@ -98,11 +100,9 @@ export namespace TableTypes {
     sendee_entity_name: string,
     sendee_franchise_address: string,
     shipped_at: Date | null,
-    arrived_at: Date | null,
+    arrived_at: Date | null
   }
 }
-
-export type DataQueryKeys = "operations" | "units" | "categories" | "items" | "entities";
 
 type ExhaustiveMapping<R extends string, T extends Record<R, unknown>> =
   Exclude<R, keyof T> extends never
@@ -116,11 +116,3 @@ export type RouteTableMapping = ExhaustiveMapping<DataRoute, {
   item_categories: TableTypes.ItemCategory,
   item_units: TableTypes.ItemUnit
 }>;
-
-export type QueryKeysMapping = ExhaustiveMapping<DataQueryKeys, {
-  operations: TableTypes.Operation,
-  entities: TableTypes.EntityFranchise,
-  items: TableTypes.Item,
-  categories: TableTypes.ItemCategory,
-  units: TableTypes.ItemUnit
-}>

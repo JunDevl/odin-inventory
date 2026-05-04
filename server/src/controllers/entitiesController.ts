@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { retrieveAllUserEntityFranchises } from "../models/db.ts";
+import { insertUserEntityFranchise, retrieveAllUserEntityFranchises } from "../models/db.ts";
 import { handleError, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
 
@@ -7,14 +7,14 @@ export const getAllEntities: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
   
   if (!id) {
-    res.status(400)
+    res.status(400);
     throw new Error("No user id provided.");
   }
 
   const entities = await handleError(retrieveAllUserEntityFranchises(id, true));
 
   if (entities instanceof PromiseError) {
-    res.status(404)
+    res.status(404);
     throw new Error(entities.error);
   }
 
@@ -23,4 +23,23 @@ export const getAllEntities: RequestHandler = async (req, res) => {
 
 export const getEntity: RequestHandler = async (req, res) => {
   res.json({ entities: true });
+}
+
+export const createEntity: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const params = req.body; // Implement sanitization...
+
+  if (!id) {
+    res.status(400);
+    throw new Error("No user id provided.");
+  }
+
+  const entity = await handleError(insertUserEntityFranchise(params));
+
+  if (entity instanceof PromiseError) {
+    res.status(404);
+    throw new Error(entity.error);
+  }
+
+  res.send("Created");
 }

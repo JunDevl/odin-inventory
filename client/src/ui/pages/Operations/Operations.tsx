@@ -1,11 +1,14 @@
 import Table from "../../components/Table/Table.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
+import type { DataRoute } from "@app/utils";
 
 type OperationsProps = {}
 
 const Operations = (props: OperationsProps) => {
-  const {status, error, data: operations} = useQuery(queryOptions["operations"])
+  const route: DataRoute = "operations";
+
+  const {status, error, data: operations} = useQuery(queryOptions[route])
 
   if (status === "pending") return <p>Loading...</p>
 
@@ -16,17 +19,18 @@ const Operations = (props: OperationsProps) => {
       <Table 
         title="Operations" 
         dataArray={operations}
+        dataRoute={route}
         requiredInputColumnTypes={{
           item_name: {
             type: ["string", "list"], 
             placeholder: "blank", 
-            listQueryOptions: queryOptions["items"],
+            listQueryOptions: queryOptions["avaliable_items"],
             relatedColumnKey: "name"
           },
           unit_name: {
             type: ["string", "list"], 
             placeholder: "auto", 
-            listQueryOptions: queryOptions["units"],
+            listQueryOptions: queryOptions["item_units"],
             relatedColumnKey: "name"
           },
           price_cents: {type: "number", placeholder: "auto"},
@@ -65,7 +69,9 @@ const Operations = (props: OperationsProps) => {
           price_cents: "Unit Price",
           total_price_cents: "Total",
           sendee_entity_name: "Sendee Name",
-          addressee_entity_name: "Addressee Name"
+          addressee_entity_name: "Addressee Name",
+          shipped_at: "Shipped at",
+          arrived_at: "Arrived at"
         }}>
       </Table>
     </>

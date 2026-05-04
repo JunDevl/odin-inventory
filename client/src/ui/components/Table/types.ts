@@ -1,4 +1,4 @@
-import type { RouteTableMapping, QueryKeysMapping, DataQueryKeys } from "@app/utils";
+import type { RouteTableMapping, DataRoute } from "@app/utils";
 import { queryOptions } from "../../../queries";
 
 export type TableData = RouteTableMapping[keyof RouteTableMapping];
@@ -14,11 +14,11 @@ type InputType<T extends InputTypeAttribute> = {
 };
 
 type InputQueryable = {
-  [K in DataQueryKeys]: InputType<InputTypeAttribute> & {
+  [K in DataRoute]: InputType<InputTypeAttribute> & {
     listQueryOptions: (typeof queryOptions)[K],
-    relatedColumnKey: keyof QueryKeysMapping[K]
+    relatedColumnKey: keyof RouteTableMapping[K]
   }
-}[DataQueryKeys];
+}[DataRoute];
 
 
 export type InputDetail = InputType<InputTypeAttribute> | InputQueryable;
