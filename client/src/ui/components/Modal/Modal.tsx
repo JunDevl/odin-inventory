@@ -48,7 +48,8 @@ export const APIParamsToTableColumns: APIToTableMapper = {
   avaliable_items: {
     userUuid: "user_id",
     name: "name",
-    description: "description"
+    description: "description",
+    categoryName: "category_name"
   },
   item_units: {
     userUuid: "user_id",
