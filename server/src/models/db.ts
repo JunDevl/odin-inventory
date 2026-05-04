@@ -333,7 +333,7 @@ export const retrieveAllUserOperation = async (userUuid: UUID, joinAll?: boolean
 export const insertUserItem = async ({userUuid, name, description, categoryName}: APICreateUpdateParams["avaliable_items"]) => {
   const createdItem = await handleError(sql`
     INSERT INTO items (user_id, name, description)
-    VALUES (${userUuid}, ${name}, ${description ?? "NULL"})
+    VALUES (${userUuid}, ${name}, ${description ?? null})
   `);
 
   if (categoryName) {
@@ -351,14 +351,14 @@ export const insertUserItem = async ({userUuid, name, description, categoryName}
 }
 
 const joinItemCategoryQuery = 
-  `JOIN categories_of_items c ON CONCAT(c.item_user_id, c.item_name) = CONCAT(items.user_id, items.name)`
+  `LEFT JOIN categories_of_items c ON CONCAT(c.item_user_id, c.item_name) = CONCAT(items.user_id, items.name)`
 
 export const retrieveUserItem = async (userUuid: UUID, name: string, joinCategory?: boolean) => {
   const item = await handleError(sql`
     SELECT * FROM items
     ${joinCategory ? sql.unsafe(joinItemCategoryQuery) : sql.unsafe("")}
     WHERE user_id = ${userUuid}
-    AND name = ${name}
+    AND name = ${name}  
   `)
 
   return item;
