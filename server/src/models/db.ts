@@ -22,6 +22,17 @@ const sql = postgres(`
   { ssl: true }
 );
 
+export const deleteUser = async(userUuid: UUID) => {
+  const deleted = await handleError(sql`
+    DELETE FROM users
+    WHERE user_id = ${userUuid}
+  `)
+  
+  if (deleted instanceof PromiseError) throw new Error(deleted.error);
+
+  return deleted;
+}
+
 export const insertNewUser = async (username: string, email: string, hashedPassword: string, initUserData?: boolean) => {
   const created = await handleError(sql`
     INSERT INTO users (name, email, password_hash)
@@ -184,10 +195,13 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
   return created;
 }
 
-export const retrieveUser = async (email: string) => {
-  const user = await handleError(sql`
+export const retrieveUser = async (param: {email: string} | {userUuid: UUID}) => {
+  const user = await handleError('email' in param ? sql`
     SELECT * FROM users
-    WHERE email = ${email}
+    WHERE email = ${param.email}
+  ` : sql`
+    SELECT * FROM users
+    WHERE user_id = ${param.userUuid}
   `)
 
   if (user instanceof PromiseError) throw new Error(user.error);
@@ -207,6 +221,18 @@ type insertOperationParams = {
   priceCents: number | null,
   shippedAt?: Date | null,
   arrivedAt?: Date | null
+}
+
+export const deleteUserOperations = async(userUuid: UUID, operationIds: number[]) => {
+  const deleted = await handleError(sql`
+    DELETE FROM operations
+    WHERE user_id = ${userUuid}
+    AND operation_id IN ${sql(operationIds)}
+  `)
+  
+  if (deleted instanceof PromiseError) throw new Error(deleted.error);
+
+  return deleted;
 }
 
 export const insertUserOperation = async ({
@@ -287,18 +313,6 @@ export const insertUserOperation = async ({
   return created;
 }
 
-export const deleteUserOperation = async(userUuid: UUID, operationId: number) => {
-  const deleted = await handleError(sql`
-    DELETE FROM operations
-    WHERE user_id = ${userUuid}
-    AND operation_id = ${operationId}
-  `)
-  
-  if (deleted instanceof PromiseError) throw new Error(deleted.error);
-
-  return deleted;
-}
-
 const joinAllOperationsQuery = 
   `JOIN items i ON CONCAT(i.user_id, name) = CONCAT(operations.user_id, operations.item_name)
   JOIN items_unit_price_history p ON CONCAT(p.item_user_id, p.item_name, history_id) = CONCAT(operations.user_id, operations.unit_price_item_name, operations.unit_price_id)`
@@ -328,6 +342,18 @@ export const retrieveAllUserOperation = async (userUuid: UUID, joinAll?: boolean
   if (operations instanceof PromiseError) throw new Error(operations.error);
 
   return operations;
+}
+
+export const deleteUserItems = async (userUuid: UUID, names: string[]) => {
+  const deletedItem = await handleError(sql`
+    DELETE FROM items
+    WHERE user_id = ${userUuid} 
+    AND name IN ${sql(names)}
+  `);
+
+  if (deletedItem instanceof PromiseError) throw new Error(deletedItem.error);
+
+  return deletedItem;
 }
 
 export const insertUserItem = async ({userUuid, name, description, categoryName}: APICreateUpdateParams["avaliable_items"]) => {
@@ -376,6 +402,18 @@ export const retrieveAllUserItems = async (userUuid: UUID, joinCategory?: boolea
   return items;
 }
 
+export const deleteUserItemCategories = async (userUuid: UUID, names: string[]) => {
+  const deletedCategory = await handleError(sql`
+    DELETE FROM item_categories
+    WHERE user_id = ${userUuid} 
+    AND name IN ${sql(names)}
+  `);
+
+  if (deletedCategory instanceof PromiseError) throw new Error(deletedCategory.error);
+
+  return deletedCategory;
+}
+
 export const insertUserItemCategory = async ({userUuid, name, description}: APICreateUpdateParams["item_categories"]) => {
   const created = await handleError(sql`
     INSERT INTO item_categories (user_id, name, description)
@@ -410,6 +448,18 @@ export const retrieveAllUserItemCategories = async (userUuid: UUID) => {
   return categories;
 }
 
+export const deleteUserItemUnits = async (userUuid: UUID, names: string[]) => {
+  const deletedUnit = await handleError(sql`
+    DELETE FROM item_units
+    WHERE user_id = ${userUuid} 
+    AND name IN ${sql(names)}
+  `);
+
+  if (deletedUnit instanceof PromiseError) throw new Error(deletedUnit.error);
+
+  return deletedUnit;
+}
+
 export const insertUserItemUnit = async ({userUuid, name, description, wikipediaUrl}: APICreateUpdateParams["item_units"]) => {
   const created = await handleError(sql`
     INSERT INTO item_units (user_id, name, description, wikipedia_url)
@@ -442,6 +492,18 @@ export const retrieveAllUserItemUnits = async (userUuid: UUID) => {
   if (units instanceof PromiseError) throw new Error(units.error);
 
   return units;
+}
+
+export const deleteUserEntityFranchises = async (userUuid: UUID, names: string[]) => {
+  const deletedEntity = await handleError(sql`
+    DELETE FROM entities
+    WHERE user_id = ${userUuid} 
+    AND name IN ${sql(names)}
+  `);
+
+  if (deletedEntity instanceof PromiseError) throw new Error(deletedEntity.error);
+
+  return deletedEntity;
 }
 
 export const insertUserEntityFranchise = async ({userUuid, name, address, trade}: APICreateUpdateParams["entities"]) => {

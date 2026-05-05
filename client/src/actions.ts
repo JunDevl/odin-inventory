@@ -1,5 +1,5 @@
 import type { UUID } from "node:crypto";
-import type { DataRoute, APICreateUpdateParams, RouteTableMapping, Prettify } from "@app/utils";
+import type { DataRoute, APICRUDParams, RouteTableMapping, Prettify } from "@app/utils";
 
 const dataRouteURI = (route: DataRoute, userID: UUID) => {
   let uri;
@@ -72,16 +72,14 @@ export const fetchAll = async <T extends DataRoute>(route: T) => {
   return res as RouteTableMapping[typeof route][];
 }
 
-type CUDParams<T extends DataRoute> = Omit<APICreateUpdateParams[T], "userUuid">;
-
-export const createData = async <T extends DataRoute>(route: T, params: CUDParams<T>) => {
+export const createData = async <T extends DataRoute>(route: T, param: Omit<APICRUDParams[T], "userUuid">) => {
   const userID = localStorage.getItem("userUUID") as UUID;
 
-  Object.keys(params).forEach(paramKey => {
-    if (paramKey.includes("cents")) (params[paramKey as keyof typeof params] as number) *= 100;
+  Object.keys(param).forEach(paramKey => {
+    if (paramKey.includes("cents")) (param[paramKey as keyof typeof param] as number) *= 100;
   })
 
-  const body = JSON.stringify({userUuid: userID, ...params});
+  const body = JSON.stringify({userUuid: userID, ...param});
   const uri = dataRouteURI(route, userID);
 
   const postData = await fetch(uri, { 
@@ -97,10 +95,22 @@ export const createData = async <T extends DataRoute>(route: T, params: CUDParam
   return createdOK;
 }
 
-export const updateData = async <T extends DataRoute>(route: T, params: CUDParams<T>) => {
+export const updateData = async <T extends DataRoute>(route: T, param: APICRUDParams[T]) => {
   
 }
 
-export const deleteDataArray = async <T extends DataRoute>(route: T, params: CUDParams<T>[]) => {
-  
+export const batchDeleteData = async <T extends DataRoute>(route: T, key: keyof APICRUDParams[T], params: APICRUDParams[T][]) => {
+  const userID = localStorage.getItem("userUUID") as UUID;
+
+  const uri = dataRouteURI(route, userID) + `?${key as string}=${params}`;
+
+  const postData = await fetch(uri, { 
+    method: "DELETE", 
+  })
+
+  if (!postData.ok) throw new Error(await postData.text());
+
+  const createdOK = await postData.text();
+
+  return createdOK;
 }

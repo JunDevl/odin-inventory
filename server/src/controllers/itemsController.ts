@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { insertUserItem, insertUserItemCategory, insertUserItemUnit, retrieveAllUserItemCategories, retrieveAllUserItems, retrieveAllUserItemUnits } from "../models/db.ts";
+import { deleteUserItems, deleteUserItemCategories, deleteUserItemUnits, insertUserItem, insertUserItemCategory, insertUserItemUnit, retrieveAllUserItemCategories, retrieveAllUserItems, retrieveAllUserItemUnits } from "../models/db.ts";
 import { handleError, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
 
@@ -44,6 +44,25 @@ export const createItemUnit: RequestHandler = async (req, res) => {
   res.send("Created");
 }
 
+export const deleteItemUnits: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const unitNames = req.query.names as string[];
+
+  if (!id || !unitNames) {
+    res.status(400);
+    throw new Error("Invalid parameters.");
+  }
+
+  const deleted = await handleError(deleteUserItemUnits(id, unitNames));
+
+  if (deleted instanceof PromiseError) {
+    res.status(404);
+    throw new Error(deleted.error);
+  }
+
+  res.send(`Deleted item units ${unitNames}`);
+}
+
 export const getAllItemCategories: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
     
@@ -85,6 +104,25 @@ export const createItemCategory: RequestHandler = async (req, res) => {
   res.send("Created");
 }
 
+export const deleteItemCategories: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const categoryNames = req.query.names as string[];
+
+  if (!id || !categoryNames) {
+    res.status(400);
+    throw new Error("Invalid parameters.");
+  }
+
+  const deleted = await handleError(deleteUserItemCategories(id, categoryNames));
+
+  if (deleted instanceof PromiseError) {
+    res.status(404);
+    throw new Error(deleted.error);
+  }
+
+  res.send(`Deleted item categories ${categoryNames}`);
+}
+
 export const getAllAvaliableItems: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
     
@@ -124,4 +162,23 @@ export const createAvaliableItem: RequestHandler = async (req, res) => {
   }
 
   res.send("Created");
+}
+
+export const deleteAvaliableItems: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const itemNames = req.query.names as string[];
+
+  if (!id || !itemNames) {
+    res.status(400);
+    throw new Error("Invalid parameters.");
+  }
+
+  const deleted = await handleError(deleteUserItems(id, itemNames));
+
+  if (deleted instanceof PromiseError) {
+    res.status(404);
+    throw new Error(deleted.error);
+  }
+
+  res.send(`Deleted items ${itemNames}`);
 }

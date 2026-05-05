@@ -1,5 +1,5 @@
 import type { InputDetail, TableData } from "../Table/types";
-import type { DataRoute, APICreateUpdateParams, EntityFranchise, RouteTableMapping } from "@app/utils";
+import type { DataRoute, APICRUDParams, EntityFranchise, RouteTableMapping } from "@app/utils";
 import type { DialogHTMLAttributes, RefObject, SubmitEvent } from "react";
 
 import { useRef } from "react";
@@ -11,8 +11,8 @@ import { useQueryClient } from "@tanstack/react-query";
 
 type APIToTableMapper = { 
   [Route in DataRoute]: { 
-    [TableColumn in keyof APICreateUpdateParams[Route]]: 
-      APICreateUpdateParams[Route][TableColumn] extends EntityFranchise ? 
+    [TableColumn in keyof APICRUDParams[Route]]: 
+      APICRUDParams[Route][TableColumn] extends EntityFranchise ? 
         {
           [EntityColumn in keyof EntityFranchise]: keyof RouteTableMapping[Route]
         }

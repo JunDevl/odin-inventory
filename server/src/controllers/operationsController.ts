@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { retrieveUserOperation, retrieveAllUserOperation, insertUserOperation, deleteUserOperation } from "../models/db.ts";
+import { retrieveUserOperation, retrieveAllUserOperation, insertUserOperation, deleteUserOperations } from "../models/db.ts";
 import { handleError, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
 
@@ -44,16 +44,16 @@ export const createOperation: RequestHandler = async (req, res) => {
   res.send("Created");
 }
 
-export const deleteOperation: RequestHandler = async (req, res) => {
+export const deleteOperations: RequestHandler = async (req, res) => {
   const userId = req.params.userID as UUID;
-  const id = Number(req.params.operationID);
+  const ids = req.query.ids as any[];
 
-  const operation = await handleError(deleteUserOperation(userId, id));
+  const operation = await handleError(deleteUserOperations(userId, ids));
 
   if (operation instanceof PromiseError) {
     res.status(404);
     throw new Error(operation.error);
   }
 
-  res.send("Deleted");
+  res.send("Deleted operations");
 }

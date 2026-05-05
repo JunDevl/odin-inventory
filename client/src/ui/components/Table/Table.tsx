@@ -129,7 +129,9 @@ const Table = <T extends TableData,>({dataArray, title, dataRoute, requiredInput
   }
 
   const deleteRows = () => {
-    
+    const selectedData = selectedIndexes.map(index => dataArray[index]);
+
+    console.log(selectedData);
   }
   
   useEffect(() => {
@@ -188,14 +190,14 @@ const Table = <T extends TableData,>({dataArray, title, dataRoute, requiredInput
           </div>
           {selectedIndexes.length > 0 ? 
             selectedIndexes.length > 1 ? 
-              <button className="delete" onClick={() => console.log("delete selected")}>
+              <button className="delete" onClick={deleteRows}>
                 Delete Selected
               </button>  :
               <>
                 <button className="edit" onClick={() => setModal("update")}>
                   Edit
                 </button>
-                <button className="delete" onClick={() => console.log("delete")}>
+                <button className="delete" onClick={deleteRows}>
                   Delete
                 </button>
               </>

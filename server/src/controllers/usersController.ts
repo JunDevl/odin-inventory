@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
+import type { UUID } from "node:crypto";
 import argon2 from "argon2"
-import { insertNewUser, retrieveUser } from "../models/db.ts";
+import { insertNewUser, retrieveUser, deleteUser } from "../models/db.ts";
 import { handleError, PromiseError } from "@app/utils";
 
 export const createUser: RequestHandler = async (req, res) => {
@@ -38,7 +39,7 @@ export const authenticateUser: RequestHandler = async (req, res) => {
     throw new Error("Invalid query parameters.");
   }
 
-  const dbRecord = await handleError(retrieveUser(email));
+  const dbRecord = await handleError(retrieveUser({email}));
 
   if (dbRecord instanceof PromiseError) {
     res.status(404);
@@ -57,4 +58,41 @@ export const authenticateUser: RequestHandler = async (req, res) => {
   }
 
   res.send(uuid);
+}
+
+export const deleteUserController: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const pass = req.query.pass as string;
+
+  if (!id || !pass) {
+    res.status(400);
+    throw new Error("Invalid parameters.");
+  }
+
+  const dbRecord = await handleError(retrieveUser({userUuid: id}));
+
+  if (dbRecord instanceof PromiseError) {
+    res.status(404);
+    throw new Error(dbRecord.error);
+  }
+
+  const [row] = dbRecord;
+  const {id: uuid, password_hash: hash} = row as {id: string, password_hash: string};
+
+  const validated = await argon2.verify((hash as unknown) as string, pass);
+
+  if (!validated) {
+    res.statusCode = 401;
+    res.send("Wrong password.");
+    return;
+  }
+
+  const deleted = await handleError(deleteUser(id));
+
+  if (deleted instanceof PromiseError) {
+    res.status(404);
+    throw new Error(deleted.error);
+  }
+
+  res.send(`Deleted user of UUID ${id}`);
 }

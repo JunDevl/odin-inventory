@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { insertUserEntityFranchise, retrieveAllUserEntityFranchises } from "../models/db.ts";
+import { deleteUserEntityFranchises, insertUserEntityFranchise, retrieveAllUserEntityFranchises } from "../models/db.ts";
 import { handleError, PromiseError } from "@app/utils";
 import type { UUID } from "node:crypto";
 
@@ -42,4 +42,23 @@ export const createEntity: RequestHandler = async (req, res) => {
   }
 
   res.send("Created");
+}
+
+export const deleteEntities: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const entityNames = req.params.names as string[];
+
+  if (!id || !entityNames) {
+    res.status(400);
+    throw new Error("Invalid parameters.");
+  }
+
+  const deleted = await handleError(deleteUserEntityFranchises(id, entityNames));
+
+  if (deleted instanceof PromiseError) {
+    res.status(404);
+    throw new Error(deleted.error);
+  }
+
+  res.send(`Deleted item units ${entityNames}`);
 }

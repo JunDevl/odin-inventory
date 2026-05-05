@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createOperation, deleteOperation, getAllOperations, getOperation } from "../controllers/operationsController.ts";
+import { createOperation, deleteOperations, getAllOperations, getOperation } from "../controllers/operationsController.ts";
 
 const operationsRouter = Router({mergeParams: true});
 
@@ -8,6 +8,6 @@ operationsRouter.get("/:operationName", getOperation);
 
 operationsRouter.post("/", createOperation);
 
-operationsRouter.delete("/:operationID", deleteOperation);
+operationsRouter.delete("/", deleteOperations);
 
 export default operationsRouter;

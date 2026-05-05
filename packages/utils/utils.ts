@@ -26,7 +26,7 @@ export type EntityType = "service_provider" | "supplier" | "client";
 
 export type EntityFranchise = {entityName: string, franchiseAddress: string};
 
-export type APICreateUpdateParams = {
+export type APICRUDParams = {
   operations: {
     userUuid: UUID,
     addressee: EntityFranchise,
@@ -54,7 +54,7 @@ export type APICreateUpdateParams = {
   item_units: {userUuid: UUID, name: string, description?: string, wikipediaUrl?: string}
 }
 
-export type DataRoute = keyof APICreateUpdateParams;
+export type DataRoute = keyof APICRUDParams;
 
 export namespace TableTypes {
   export type EntityFranchise = {

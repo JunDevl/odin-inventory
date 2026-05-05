@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllItemCategories, getAllAvaliableItems, getAvaliableItem, getItemCategory, getAllItemUnits, getItemUnit, createAvaliableItem, createItemCategory, createItemUnit } from "../controllers/itemsController.ts";
+import { getAllItemCategories, getAllAvaliableItems, getAvaliableItem, getItemCategory, getAllItemUnits, getItemUnit, createAvaliableItem, createItemCategory, createItemUnit, deleteAvaliableItems, deleteItemUnits, deleteItemCategories } from "../controllers/itemsController.ts";
 import path from "path";
 import express from "express";
 
@@ -25,5 +25,9 @@ itemsRouter.post("/avaliable", createAvaliableItem);
 itemsRouter.post("/categories", createItemCategory);
 
 itemsRouter.post("/units", createItemUnit);
+
+itemsRouter.delete("/avaliable", deleteAvaliableItems);
+itemsRouter.delete("/categories", deleteItemUnits);
+itemsRouter.delete("/units", deleteItemCategories);
 
 export default itemsRouter;
