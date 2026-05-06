@@ -137,6 +137,10 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
     if (data instanceof PromiseError) throw new Error(data.error);
 
     queryClient.fetchQuery({queryKey: [route]});
+    
+    formInputs.current.forEach(input => 
+      input.type !== "checkbox" ? input.value = "" : input.checked = false
+    );
   }
 
   return (
