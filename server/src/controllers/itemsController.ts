@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { deleteUserItems, deleteUserItemCategories, deleteUserItemUnits, insertUserItem, insertUserItemCategory, insertUserItemUnit, retrieveAllUserItemCategories, retrieveAllUserItems, retrieveAllUserItemUnits } from "../models/db.ts";
-import { handleError, PromiseError } from "@app/utils";
+import { handleError, PromiseError } from "@packages/utils";
 import type { UUID } from "node:crypto";
 
 export const getAllItemUnits: RequestHandler = async (req, res) => {
@@ -46,7 +46,7 @@ export const createItemUnit: RequestHandler = async (req, res) => {
 
 export const deleteItemUnits: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const unitNames = req.query.names as string[];
+  const unitNames = (req.query.names as string).split(",");
 
   if (!id || !unitNames) {
     res.status(400);
@@ -106,7 +106,7 @@ export const createItemCategory: RequestHandler = async (req, res) => {
 
 export const deleteItemCategories: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const categoryNames = req.query.names as string[];
+  const categoryNames = (req.query.names as string).split(",");
 
   if (!id || !categoryNames) {
     res.status(400);
@@ -166,7 +166,7 @@ export const createAvaliableItem: RequestHandler = async (req, res) => {
 
 export const deleteAvaliableItems: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const itemNames = req.query.names as string[];
+  const itemNames = (req.query.names as string).split(",");
 
   if (!id || !itemNames) {
     res.status(400);

@@ -1,5 +1,5 @@
 import type { UseQueryOptions } from "@tanstack/react-query";
-import type { DataRoute } from "@app/utils";
+import type { DataRoute } from "@packages/utils";
 import { fetchAll } from "./actions";
 
 export const queryOptions = {

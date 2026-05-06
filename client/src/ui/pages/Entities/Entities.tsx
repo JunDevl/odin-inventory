@@ -1,7 +1,7 @@
 import Table from "../../components/Table/Table"
 import { useQuery } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
-import type { DataRoute } from "@app/utils";
+import type { DataRoute } from "@packages/utils";
 
 type EntitiesProps = {}
 
@@ -20,6 +20,7 @@ const Entities = (props: EntitiesProps) => {
         title="Entities" 
         dataArray={entities}
         dataRoute={route}
+        identifier={{key: "name", type: "name"}}
         requiredInputColumnTypes={{
           entity_name: {type: "string", placeholder: "blank"},
           trade: {type: "string", placeholder: "blank", notMandatory: true},

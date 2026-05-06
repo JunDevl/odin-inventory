@@ -18,9 +18,9 @@ export const handleError = async <T>(promise: Promise<T>) => {
   }
 }
 
-export type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
+export type Prettify<T> = T extends infer O
+  ? { [ K in keyof O ]: O[ K ] }
+  : never;
 
 export type EntityType = "service_provider" | "supplier" | "client";
 
@@ -28,6 +28,7 @@ export type EntityFranchise = {entityName: string, franchiseAddress: string};
 
 export type APICRUDParams = {
   operations: {
+    operationId: number,
     userUuid: UUID,
     addressee: EntityFranchise,
     sendee: EntityFranchise,
@@ -116,3 +117,59 @@ export type RouteTableMapping = ExhaustiveMapping<DataRoute, {
   item_categories: TableTypes.ItemCategory,
   item_units: TableTypes.ItemUnit
 }>;
+
+type APIToTableMapper = { 
+  [Route in DataRoute]: { 
+    [TableColumn in keyof APICRUDParams[Route]]: 
+      APICRUDParams[Route][TableColumn] extends EntityFranchise ? 
+        {
+          [EntityColumn in keyof EntityFranchise]: keyof RouteTableMapping[Route]
+        }
+        : keyof RouteTableMapping[Route]
+  }
+};
+
+export const APIParamsToTableColumns: APIToTableMapper = {
+  operations: {
+    operationId: "operation_id",
+    userUuid: "user_id",
+    addressee: {
+      entityName: "addressee_entity_name",
+      franchiseAddress: "addressee_franchise_address"
+    },
+    sendee: {
+      entityName: "sendee_entity_name",
+      franchiseAddress: "sendee_franchise_address"
+    },
+    itemName: "item_name",
+    quantity: "quantity",
+    unit: "unit_name",
+    priceCents: "price_cents",
+    shippedAt: "shipped_at",
+    arrivedAt: "arrived_at"
+  },
+  entities: {
+    userUuid: "entity_user_id",
+    name: "entity_name",
+    address: "address",
+    type: "type",
+    trade: "trade"
+  },
+  avaliable_items: {
+    userUuid: "user_id",
+    name: "name",
+    description: "description",
+    categoryName: "category_name"
+  },
+  item_units: {
+    userUuid: "user_id",
+    name: "name",
+    description: "description",
+    wikipediaUrl: "wikipedia_url"
+  },
+  item_categories: {
+    userUuid: "user_id",
+    name: "name",
+    description: "description"
+  }
+};

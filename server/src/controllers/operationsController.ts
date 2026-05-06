@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { retrieveUserOperation, retrieveAllUserOperation, insertUserOperation, deleteUserOperations } from "../models/db.ts";
-import { handleError, PromiseError } from "@app/utils";
+import { handleError, PromiseError } from "@packages/utils";
 import type { UUID } from "node:crypto";
 
 export const getAllOperations: RequestHandler = async (req, res) => {
@@ -46,7 +46,7 @@ export const createOperation: RequestHandler = async (req, res) => {
 
 export const deleteOperations: RequestHandler = async (req, res) => {
   const userId = req.params.userID as UUID;
-  const ids = req.query.ids as any[];
+  const ids = (req.query.ids as string).split(",").map(id => Number(id));
 
   const operation = await handleError(deleteUserOperations(userId, ids));
 

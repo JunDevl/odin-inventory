@@ -1,7 +1,7 @@
 import Table from "../../components/Table/Table.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
-import type { DataRoute } from "@app/utils";
+import type { DataRoute } from "@packages/utils";
 
 type OperationsProps = {}
 
@@ -20,6 +20,7 @@ const Operations = (props: OperationsProps) => {
         title="Operations" 
         dataArray={operations}
         dataRoute={route}
+        identifier={{key: "operationId", type: "number"}}
         requiredInputColumnTypes={{
           item_name: {
             type: ["string", "list"], 

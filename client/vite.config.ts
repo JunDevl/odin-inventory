@@ -10,7 +10,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@app/utils": path.resolve(__dirname, "../packages/utils/src/index.ts")
+      "@packages/utils": path.resolve(__dirname, "../packages/utils/utils.ts")
     }
   }
 })

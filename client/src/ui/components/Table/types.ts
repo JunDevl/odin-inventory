@@ -1,4 +1,4 @@
-import type { RouteTableMapping, DataRoute } from "@app/utils";
+import type { RouteTableMapping, DataRoute } from "@packages/utils";
 import { queryOptions } from "../../../queries";
 
 export type TableData = RouteTableMapping[keyof RouteTableMapping];

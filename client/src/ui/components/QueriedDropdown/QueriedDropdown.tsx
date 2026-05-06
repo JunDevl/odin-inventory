@@ -1,7 +1,7 @@
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
 import type { HTMLProps, JSX } from "react";
-import type { DataRoute, RouteTableMapping } from "@app/utils";
+import type { DataRoute, RouteTableMapping } from "@packages/utils";
 
 type DropdownProps<T extends (typeof queryOptions)[keyof typeof queryOptions]> = HTMLProps<HTMLSelectElement> & {
   queryOptions: T,

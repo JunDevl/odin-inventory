@@ -1,25 +1,34 @@
-import "./table.css";
-import { useEffect, useRef, useState,  } from "react";
 import type { ChangeEvent, HTMLProps, MouseEvent } from "react";
+import "./table.css";
 import type { TableData, InputDetail } from "./types";
+import { useEffect, useRef, useState,  } from "react";
 
+import type { APICRUDParams, DataRoute } from "@packages/utils";
+import { handleError, PromiseError, APIParamsToTableColumns } from "@packages/utils";
+// import { APIParamsToTableColumns } from "../../../utils";
 import Checkbox from "../Checkbox/Checkbox";
 import Modal from "../Modal/Modal";
-import type { DataRoute } from "@app/utils";
+import { batchDeleteData } from "../../../actions";
+import { useQueryClient } from "@tanstack/react-query";
 
-type TableProps<T extends TableData> = {
+type TableProps<T extends TableData, U extends DataRoute> = {
   dataArray: T[],
   title: string,
-  dataRoute: DataRoute,
+  dataRoute: U,
+  identifier: {key: keyof Omit<APICRUDParams[U], "userUuid">, type: "number" | "name"};
   requiredInputColumnTypes: {
     [TableColumn in keyof T]?: InputDetail
   },
   renamedColumns: {
-    [RequiredColumn in keyof TableProps<T>["requiredInputColumnTypes"]]: string
+    [RequiredColumn in keyof TableProps<T, U>["requiredInputColumnTypes"]]: string
   }
 } & HTMLProps<HTMLTableElement>
 
-const Table = <T extends TableData,>({dataArray, title, dataRoute, requiredInputColumnTypes, renamedColumns, ...props}: TableProps<T>) => {
+const Table = <T extends TableData, U extends DataRoute>({
+  dataArray, title, dataRoute, identifier, requiredInputColumnTypes, renamedColumns, ...props
+}: TableProps<T, U>) => {
+  const queryClient = useQueryClient();
+
   const selectAll = useRef<HTMLInputElement>(null);
   const rowSelectors = useRef<HTMLInputElement[]>([]);
   const tableBody = useRef<HTMLTableSectionElement>(null);
@@ -128,10 +137,21 @@ const Table = <T extends TableData,>({dataArray, title, dataRoute, requiredInput
     return data as any; 
   }
 
-  const deleteRows = () => {
+  const deleteRows = async () => {
+    const params: any[] = [];
+
     const selectedData = selectedIndexes.map(index => dataArray[index]);
 
-    console.log(selectedData);
+    const {key, type} = identifier;
+    const colKey = APIParamsToTableColumns[dataRoute][key];
+
+    selectedData.forEach(data => params.push(data[colKey as keyof typeof data]))
+
+    const deleted = await handleError(batchDeleteData(dataRoute, type, params));
+
+    if (deleted instanceof PromiseError) throw new Error(deleted.error);
+
+    queryClient.fetchQuery({queryKey: [dataRoute]});
   }
   
   useEffect(() => {

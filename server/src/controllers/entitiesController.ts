@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { deleteUserEntityFranchises, insertUserEntityFranchise, retrieveAllUserEntityFranchises } from "../models/db.ts";
-import { handleError, PromiseError } from "@app/utils";
+import { handleError, PromiseError } from "@packages/utils";
 import type { UUID } from "node:crypto";
 
 export const getAllEntities: RequestHandler = async (req, res) => {
@@ -46,7 +46,7 @@ export const createEntity: RequestHandler = async (req, res) => {
 
 export const deleteEntities: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const entityNames = req.params.names as string[];
+  const entityNames = (req.query.names as string).split(",");
 
   if (!id || !entityNames) {
     res.status(400);

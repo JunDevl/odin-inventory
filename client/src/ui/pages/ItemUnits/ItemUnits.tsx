@@ -1,7 +1,7 @@
 import Table from "../../components/Table/Table";
 import { useQuery } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
-import type { DataRoute } from "@app/utils";
+import type { DataRoute } from "@packages/utils";
 
 type UnitsProps = {}
 
@@ -20,6 +20,7 @@ const ItemUnits = (props: UnitsProps) => {
         title="Item Units" 
         dataArray={units}
         dataRoute={route}
+        identifier={{key: "name", type: "name"}}
         requiredInputColumnTypes={{
           name: {type: "string", placeholder: "blank"},
           description: {type: "string", placeholder: "blank", notMandatory: true},

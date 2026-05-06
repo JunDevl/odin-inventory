@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import type { UUID } from "node:crypto";
 import argon2 from "argon2"
 import { insertNewUser, retrieveUser, deleteUser } from "../models/db.ts";
-import { handleError, PromiseError } from "@app/utils";
+import { handleError, PromiseError } from "@packages/utils";
 
 export const createUser: RequestHandler = async (req, res) => {
   const { username, email, password, initData } = req.body;

@@ -1,5 +1,5 @@
 import type { UUID } from "node:crypto";
-import type { DataRoute, APICRUDParams, RouteTableMapping, Prettify } from "@app/utils";
+import type { DataRoute, APICRUDParams, RouteTableMapping, Prettify } from "@packages/utils";
 
 const dataRouteURI = (route: DataRoute, userID: UUID) => {
   let uri;
@@ -99,13 +99,13 @@ export const updateData = async <T extends DataRoute>(route: T, param: APICRUDPa
   
 }
 
-export const batchDeleteData = async <T extends DataRoute>(route: T, key: keyof APICRUDParams[T], params: APICRUDParams[T][]) => {
+export const batchDeleteData = async <T extends DataRoute>(route: T, type: "number" | "name", params: APICRUDParams[T][keyof Omit<APICRUDParams[T], "userUuid">][]) => {
   const userID = localStorage.getItem("userUUID") as UUID;
 
-  const uri = dataRouteURI(route, userID) + `?${key as string}=${params}`;
+  const uri = dataRouteURI(route, userID) + `?${type === "name" ? "names" : "ids"}=${params}`;
 
   const postData = await fetch(uri, { 
-    method: "DELETE", 
+    method: "DELETE",
   })
 
   if (!postData.ok) throw new Error(await postData.text());

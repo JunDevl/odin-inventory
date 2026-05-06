@@ -1,5 +1,6 @@
 import type { InputDetail, TableData } from "../Table/types";
-import type { DataRoute, APICRUDParams, EntityFranchise, RouteTableMapping } from "@app/utils";
+import type { DataRoute } from "@packages/utils";
+import { handleError, PromiseError, APIParamsToTableColumns } from "@packages/utils";
 import type { DialogHTMLAttributes, RefObject, SubmitEvent } from "react";
 
 import { useRef } from "react";
@@ -8,61 +9,6 @@ import Checkbox from "../Checkbox/Checkbox";
 
 import { createData, updateData } from "../../../actions";
 import { useQueryClient } from "@tanstack/react-query";
-
-type APIToTableMapper = { 
-  [Route in DataRoute]: { 
-    [TableColumn in keyof APICRUDParams[Route]]: 
-      APICRUDParams[Route][TableColumn] extends EntityFranchise ? 
-        {
-          [EntityColumn in keyof EntityFranchise]: keyof RouteTableMapping[Route]
-        }
-        : keyof RouteTableMapping[Route]
-  }
-};
-
-export const APIParamsToTableColumns: APIToTableMapper = {
-  operations: {
-    userUuid: "user_id",
-    addressee: {
-      entityName: "addressee_entity_name",
-      franchiseAddress: "addressee_franchise_address"
-    },
-    sendee: {
-      entityName: "sendee_entity_name",
-      franchiseAddress: "sendee_franchise_address"
-    },
-    itemName: "item_name",
-    quantity: "quantity",
-    unit: "unit_name",
-    priceCents: "price_cents",
-    shippedAt: "shipped_at",
-    arrivedAt: "arrived_at"
-  },
-  entities: {
-    userUuid: "entity_user_id",
-    name: "entity_name",
-    address: "address",
-    type: "type",
-    trade: "trade"
-  },
-  avaliable_items: {
-    userUuid: "user_id",
-    name: "name",
-    description: "description",
-    categoryName: "category_name"
-  },
-  item_units: {
-    userUuid: "user_id",
-    name: "name",
-    description: "description",
-    wikipediaUrl: "wikipedia_url"
-  },
-  item_categories: {
-    userUuid: "user_id",
-    name: "name",
-    description: "description"
-  }
-};
 
 type ModalProps = DialogHTMLAttributes<HTMLDialogElement> & {
   details: {
@@ -152,7 +98,7 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
     }
   }
 
-  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formData = new FormData(form.current!);
@@ -186,7 +132,11 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
       }
     });
 
-    createData(route, params).then((res) => {queryClient.fetchQuery({queryKey: [route]})});
+    const data = await handleError(createData(route, params));
+
+    if (data instanceof PromiseError) throw new Error(data.error);
+
+    queryClient.fetchQuery({queryKey: [route]});
   }
 
   return (

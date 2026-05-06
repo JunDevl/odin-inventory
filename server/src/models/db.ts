@@ -3,10 +3,10 @@ import { config } from "dotenv";
 config();
 
 import postgres from "postgres";
-import { handleError, PromiseError } from "@app/utils";
+import { handleError, PromiseError } from "@packages/utils";
 import type { UUID } from "node:crypto";
 import { entityFranchises, itemCategories, items, itemUnits, unitPriceHistory, operations, categoriesOfItems} from "./newUserData.ts";
-import type { EntityType, APICreateUpdateParams } from "@app/utils";
+import type { EntityType, APICRUDParams } from "@packages/utils";
 
 const sql = postgres(`
     postgresql://${
@@ -237,7 +237,7 @@ export const deleteUserOperations = async(userUuid: UUID, operationIds: number[]
 
 export const insertUserOperation = async ({
   userUuid, addressee, sendee, itemName, quantity, unit, priceCents, shippedAt, arrivedAt
-}: APICreateUpdateParams["operations"]) => {
+}: Omit<APICRUDParams["operations"], "operationId">) => {
   const {entityName: addresseeEntityName, franchiseAddress: adresseeFranchiseAddress} = addressee;
 
   const {entityName: sendeeEntityName, franchiseAddress: sendeeFranchiseAddress} = sendee;
@@ -356,7 +356,7 @@ export const deleteUserItems = async (userUuid: UUID, names: string[]) => {
   return deletedItem;
 }
 
-export const insertUserItem = async ({userUuid, name, description, categoryName}: APICreateUpdateParams["avaliable_items"]) => {
+export const insertUserItem = async ({userUuid, name, description, categoryName}: APICRUDParams["avaliable_items"]) => {
   const createdItem = await handleError(sql`
     INSERT INTO items (user_id, name, description)
     VALUES (${userUuid}, ${name}, ${description ?? null})
@@ -414,7 +414,7 @@ export const deleteUserItemCategories = async (userUuid: UUID, names: string[]) 
   return deletedCategory;
 }
 
-export const insertUserItemCategory = async ({userUuid, name, description}: APICreateUpdateParams["item_categories"]) => {
+export const insertUserItemCategory = async ({userUuid, name, description}: APICRUDParams["item_categories"]) => {
   const created = await handleError(sql`
     INSERT INTO item_categories (user_id, name, description)
     VALUES (${userUuid}, ${name}, ${description ?? null})
@@ -460,7 +460,7 @@ export const deleteUserItemUnits = async (userUuid: UUID, names: string[]) => {
   return deletedUnit;
 }
 
-export const insertUserItemUnit = async ({userUuid, name, description, wikipediaUrl}: APICreateUpdateParams["item_units"]) => {
+export const insertUserItemUnit = async ({userUuid, name, description, wikipediaUrl}: APICRUDParams["item_units"]) => {
   const created = await handleError(sql`
     INSERT INTO item_units (user_id, name, description, wikipedia_url)
     VALUES (${userUuid}, ${name}, ${description ?? null}, ${wikipediaUrl ?? null})
@@ -506,7 +506,7 @@ export const deleteUserEntityFranchises = async (userUuid: UUID, names: string[]
   return deletedEntity;
 }
 
-export const insertUserEntityFranchise = async ({userUuid, name, address, trade}: APICreateUpdateParams["entities"]) => {
+export const insertUserEntityFranchise = async ({userUuid, name, address, trade}: APICRUDParams["entities"]) => {
   const createdEntity = await handleError(sql`
     INSERT INTO entities (user_id, name, trade)
     VALUES (${userUuid}, ${name}, ${trade ?? null})
