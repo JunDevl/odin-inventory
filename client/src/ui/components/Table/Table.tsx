@@ -42,9 +42,12 @@ const Table = <T extends TableData, U extends DataRoute>({
     return arr;
   })();
 
-  const [modal, setModal] = useState<null | "insert" | "update">(null);
+  const [modal, setModal] = useState<null | "insert" | "update" | "view">(null);
   const insertModal = useRef<HTMLDialogElement>(null);
   const updateModal = useRef<HTMLDialogElement>(null);
+  const viewModal = useRef<HTMLDialogElement>(null);
+
+  const [viewedItem, setViewedItem] = useState<T>(dataArray[0]);
 
   const selectAllItems = (e: ChangeEvent<HTMLInputElement, HTMLInputElement> | MouseEvent<HTMLTableHeaderCellElement | HTMLTableCellElement, globalThis.MouseEvent>) => {
     e.stopPropagation();
@@ -164,6 +167,9 @@ const Table = <T extends TableData, U extends DataRoute>({
       case "update":
         updateModal.current!.showModal();
         break;
+      case "view":
+        viewModal.current!.showModal();
+        break;
     }
   }, [modal])
 
@@ -188,6 +194,16 @@ const Table = <T extends TableData, U extends DataRoute>({
         route={dataRoute}
         operation="update"
         selectedItem={dataArray[selectedIndexes[0]]}
+        onClose={() => setModal(null)}
+      />
+      <Modal
+        id="view"
+        ref={viewModal}
+        details={requiredInputColumnTypes} 
+        columns={renamedColumns} 
+        route={dataRoute}
+        operation="view"
+        selectedItem={viewedItem}
         onClose={() => setModal(null)}
       />
       <h1>{title}</h1>
@@ -231,14 +247,12 @@ const Table = <T extends TableData, U extends DataRoute>({
             <thead>
               <tr>
                 <th scope="col" onClickCapture={selectAllItems} className="selectable" >
-
-                    <Checkbox 
-                      name="all" 
-                      id="all" 
-                      ref={selectAll}
-                      onChange={selectAllItems}
-                    />
-
+                  <Checkbox 
+                    name="all" 
+                    id="all" 
+                    ref={selectAll}
+                    onChange={selectAllItems}
+                  />
                 </th>
                 {Object.values(renamedColumns).map(col => 
                   <th scope="col" key={col as string}>
@@ -249,7 +263,12 @@ const Table = <T extends TableData, U extends DataRoute>({
             </thead>
             <tbody ref={tableBody}>
               {dataArray.map((_, index) =>
-                <tr id={`row${index+1}`} key={`row${index+1}`} data-index={index}>
+                <tr 
+                  id={`row${index+1}`} 
+                  key={`row${index+1}`} 
+                  data-index={index} 
+                  onMouseEnter={() => setViewedItem(dataArray[index])}
+                >
                   <th scope="row" onClickCapture={selectItem} className="selectable">
                     <Checkbox 
                       ref={element => {rowSelectors.current[index] = element as HTMLInputElement}}
@@ -260,7 +279,7 @@ const Table = <T extends TableData, U extends DataRoute>({
                     />
                   </th>
                   {Object.keys(renamedColumns).map((key) =>
-                    <td key={key}>
+                    <td key={key} onClick={() => setModal("view")}>
                       {showCellData(index, key as keyof T)}
                     </td>
                   )}

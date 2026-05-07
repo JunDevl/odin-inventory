@@ -15,16 +15,19 @@ type ModalProps = DialogHTMLAttributes<HTMLDialogElement> & {
     [TableColumn in keyof TableData | (string & {})]?: InputDetail
   },
   columns: {
-    [RequiredColumn in keyof ModalProps["details"]]?: string
+    [RequiredColumn in keyof ModalProps["details"]]: string
   },
   route: DataRoute
   ref?: RefObject<HTMLDialogElement | null>
 } & ({
   operation: "insert",
-  selectedItem?: never
+  selectedItem?: undefined
 } | {
   operation: "update",
   selectedItem: Record<string, any>
+} | {
+  operation: "view",
+  selectedItem: Record<string, any> | null
 })
 
 const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}: ModalProps) => {
@@ -145,15 +148,33 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
 
   return (
     <dialog id="insert" ref={modal} {...props}>
-      <h3>{operation === "insert" ? "Insert new item to collection" : "Update item"}</h3>
+      <h2>
+        {
+          operation === "insert" ? "Insert new item to collection" : 
+          operation === "update" ? "Update item" : "View item"
+        }
+      </h2>
       <form action="POST" onSubmit={e => handleSubmit(e)} ref={form}>
         <ul>
-          {Object.entries(details).map(([key, value], index) => 
-            <li key={key}>
-              <label htmlFor={key}>{columns[key]}</label>
-              {modalInput(key, value!, index)}
-            </li>
-          )}
+          {
+            Object.entries(details).map(([key, value], index) => 
+              <li key={key}>
+                {
+                  operation !== "view" ?
+                    <>
+                      <label className="column_name" htmlFor={key}>{columns[key]}</label>
+                      {modalInput(key, value!, index)} 
+                    </> :
+                    <>
+                      <h4 className="column_name">{columns[key]}</h4>
+                      {selectedItem && 
+                        <p>{selectedItem[key] instanceof Date ? selectedItem[key].toDateString() : selectedItem[key]}</p>
+                      }
+                    </>
+                }
+              </li>
+            ) 
+          }
         </ul>
         <button type="submit">Submit</button>
       </form>

@@ -89,6 +89,34 @@ table {
     }
   }
 
+  tr:has(td:hover)> :not(.selectable) {
+    --background-shadow-mask: oklch(from var(--primary-color) 8% c h / 35%);
+    --lighter-shadow-mask: oklch(from var(--primary-color) 22% c h / 65%);
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background-color: var(--background-shadow-mask);
+    }
+
+
+    &:is(td:first-of-type)::after {
+      content: "View";
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      padding-left: 2rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--lighter-shadow-mask), var(--background-shadow-mask) 40%);
+    }
+  }
+
   &>thead {
     font-size: 0.9rem;
     border-radius: 0 var(--border-radius);
