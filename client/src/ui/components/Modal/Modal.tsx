@@ -40,14 +40,16 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
   const modalInput = (key: keyof typeof details, detail: InputDetail, index: number) => {
     const dataType = detail.type instanceof Array ? detail.type[0] : detail.type;
     const required = !detail.notMandatory;
+    const initialValue = selectedItem ? selectedItem[key] : "";
 
     switch (dataType) {
       case "boolean": 
-        return <Checkbox 
-          name={key} 
-          id={key} 
-          checked={false} 
-          ref={element => {formInputs.current.set(key, element as HTMLInputElement)}} 
+        return <Checkbox
+          name={key}
+          id={key}
+          checked={false}
+          ref={element => {formInputs.current.set(key, element as HTMLInputElement)}}
+          defaultChecked={initialValue || false}
           required={required}
         />
       case "number":
@@ -56,6 +58,7 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
           name={key} 
           id={key} 
           ref={element => {formInputs.current.set(key, element as HTMLInputElement)}} 
+          defaultValue={initialValue}
           required={required}
         />
       case "string": {
@@ -69,6 +72,7 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
               queryOptions={queryOptions} 
               column={column} 
               ref={element => {formInputs.current.set(key, element as HTMLSelectElement)}}
+              defaultValue={initialValue}
               required={required}
             />
           );
@@ -79,6 +83,7 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
           name={key} 
           id={key} 
           ref={element => {formInputs.current.set(key, element as HTMLInputElement)}} 
+          defaultValue={initialValue}
           required={required}
         />
       }
@@ -88,6 +93,7 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
           name={key} 
           id={key} 
           ref={element => {formInputs.current.set(key, element as HTMLInputElement)}}
+          defaultValue={initialValue}
           required={required}
         />
       default:
@@ -96,6 +102,7 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
           name={key} 
           id={key} 
           ref={element => {formInputs.current.set(key, element as HTMLInputElement)}}
+          defaultValue={initialValue}
           required={required}
         />
     }

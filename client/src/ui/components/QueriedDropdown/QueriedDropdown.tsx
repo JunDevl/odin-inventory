@@ -1,7 +1,7 @@
-import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
-import { queryOptions } from "../../../queries";
 import type { HTMLProps, JSX } from "react";
 import type { DataRoute, RouteTableMapping } from "@packages/utils";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import { queryOptions } from "../../../queries";
 
 type DropdownProps<T extends (typeof queryOptions)[keyof typeof queryOptions]> = HTMLProps<HTMLSelectElement> & {
   queryOptions: T,
@@ -13,24 +13,34 @@ type DropdownProps<T extends (typeof queryOptions)[keyof typeof queryOptions]> =
 const QueriedDropdown = <T extends (typeof queryOptions)[keyof typeof queryOptions],>({queryOptions, column, defaultValue, required, ...props}: DropdownProps<T>) => {
   const {status, data, error} = useQuery(queryOptions as UseQueryOptions);
 
-  const renderOnStatus = () => {
-    if (!(data instanceof Array)) return <option>No array provided</option>
+  const renderOnStatus: () => JSX.Element[] = () => {
+    if (!(data instanceof Array)) return [<option key={null}>No array provided</option>]
 
     switch (status) {
-      case "pending": return <option value=""></option>;
-      case "error": return <option value="error">Error</option>;
+      case "pending": return [<option value="" key={null}></option>];
+      case "error": return [<option value="error" key={null}>{String(error)}</option>];
       case "success": {
         const uniqueOptions: Map<string, JSX.Element> = new Map();
 
-        data.forEach((value, i) => uniqueOptions.set(value[column], <option value={value[column]} key={column as string}>{value[column]}</option>))
+        data.forEach(item => 
+          uniqueOptions.set(
+            item[column], 
+            <option 
+              value={item[column]} 
+              key={column as string}
+            >
+              {item[column]}
+            </option>
+          )
+        )
 
-        return uniqueOptions;
+        return Object.values(uniqueOptions);
       }
     }
   }
 
   return (
-    <select {...props} required={required} defaultValue={!required ? "" : undefined}>
+    <select {...props} required={required} defaultValue={status === "success" ? defaultValue : ""}>
       {!required && <option value=""></option>}
       {renderOnStatus()}
     </select>
