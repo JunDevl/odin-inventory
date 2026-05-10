@@ -1,8 +1,8 @@
-import type { UseQueryOptions } from "@tanstack/react-query";
-import type { DataRoute } from "@packages/utils";
+import type { UseQueryOptions, UseSuspenseQueryOptions } from "@tanstack/react-query";
+import type { APICRUDParams, DataRoute } from "@packages/utils";
 import { fetchAll } from "./actions";
 
-export const queryOptions = {
+export const queryOptions: { [K in DataRoute]: UseSuspenseQueryOptions<APICRUDParams[K][]> & { queryKey: [K] } } = {
   operations: {
     queryKey: ["operations"],
     queryFn: () => fetchAll("operations"),
@@ -28,4 +28,4 @@ export const queryOptions = {
     queryFn: () => fetchAll("entities"),
     staleTime: Infinity
   },
-} satisfies { [k in DataRoute]: UseQueryOptions & { queryKey: [k] } };
+}

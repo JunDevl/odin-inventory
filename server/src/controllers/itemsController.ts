@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { deleteUserItems, deleteUserItemCategories, deleteUserItemUnits, insertUserItem, insertUserItemCategory, insertUserItemUnit, retrieveAllUserItemCategories, retrieveAllUserItems, retrieveAllUserItemUnits } from "../models/db.ts";
+import { deleteUserItems, deleteUserItemCategories, deleteUserItemUnits, insertUserItem, insertUserItemCategory, insertUserItemUnit, retrieveAllUserItemCategories, retrieveAllUserItems, retrieveAllUserItemUnits, updateUserItemCategory, updateUserItemUnit, updateUserItem } from "../models/db.ts";
 import { handleError, PromiseError } from "@packages/utils";
 import type { UUID } from "node:crypto";
 
@@ -35,6 +35,25 @@ export const createItemUnit: RequestHandler = async (req, res) => {
   }
 
   const unit = await handleError(insertUserItemUnit(params));
+
+  if (unit instanceof PromiseError) {
+    res.status(404);
+    throw new Error(unit.error);
+  }
+
+  res.send("Created");
+}
+
+export const updateItemUnit: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const params = req.body; // Implement sanitization...
+
+  if (!id) {
+    res.status(400);
+    throw new Error("No user id provided.");
+  }
+
+  const unit = await handleError(updateUserItemUnit(params));
 
   if (unit instanceof PromiseError) {
     res.status(404);
@@ -104,6 +123,25 @@ export const createItemCategory: RequestHandler = async (req, res) => {
   res.send("Created");
 }
 
+export const updateItemCategory: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const params = req.body; // Implement sanitization...
+
+  if (!id) {
+    res.status(400);
+    throw new Error("No user id provided.");
+  }
+
+  const category = await handleError(updateUserItemCategory(params));
+
+  if (category instanceof PromiseError) {
+    res.status(404);
+    throw new Error(category.error);
+  }
+
+  res.send("Updated");
+}
+
 export const deleteItemCategories: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
   const categoryNames = (req.query.names as string).split(",");
@@ -162,6 +200,25 @@ export const createAvaliableItem: RequestHandler = async (req, res) => {
   }
 
   res.send("Created");
+}
+
+export const updateAvaliableItem: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const params = req.body; // Implement sanitization...
+
+  if (!id) {
+    res.status(400);
+    throw new Error("No user id provided.");
+  }
+
+  const item = await handleError(updateUserItem(params));
+
+  if (item instanceof PromiseError) {
+    res.status(404);
+    throw new Error(item.error);
+  }
+
+  res.send("Updated");
 }
 
 export const deleteAvaliableItems: RequestHandler = async (req, res) => {

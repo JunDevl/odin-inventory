@@ -1,10 +1,10 @@
-import type { InputDetail, TableData } from "../Table/types";
-import type { DataRoute } from "@packages/utils";
-import { handleError, PromiseError, APIParamsToTableColumns } from "@packages/utils";
+import type { InputDetail, TableData } from "../DataPage/types";
+import type { APICRUDParams, DataRoute } from "@packages/utils";
 import type { DialogHTMLAttributes, RefObject, SubmitEvent } from "react";
+import { handleError, PromiseError } from "@packages/utils";
 
 import { useRef } from "react";
-import QueriedDropdown from "../QueriedDropdown/QueriedDropdown";
+import Dropdown from "../Dropdown/Dropdown";
 import Checkbox from "../Checkbox/Checkbox";
 
 import { createData, updateData } from "../../../actions";
@@ -66,11 +66,12 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
           const {listQueryOptions: queryOptions, relatedColumnKey: column} = detail;
 
           return (
-            <QueriedDropdown 
+            <Dropdown 
               name={key}
               id={key}
-              queryOptions={queryOptions} 
-              column={column} 
+              queryOptions={queryOptions}
+              route={route}
+              column={column as keyof APICRUDParams[typeof route]} 
               ref={element => {formInputs.current.set(key, element as HTMLSelectElement)}}
               defaultValue={initialValue}
               required={required}
@@ -78,11 +79,23 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
           );
         }
 
+        if ("list" in detail) {
+          return <Dropdown 
+            name={key}
+            id={key}
+            route={route}
+            optionsList={detail.list!}
+            ref={element => {formInputs.current.set(key, element as HTMLSelectElement)}}
+            defaultValue={initialValue}
+            required={required}
+          />
+        }
+
         return <input 
           type="text" 
           name={key} 
           id={key} 
-          ref={element => {formInputs.current.set(key, element as HTMLInputElement)}} 
+          ref={element => {formInputs.current.set(key, element as HTMLInputElement)}}
           defaultValue={initialValue}
           required={required}
         />
@@ -112,37 +125,18 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
     e.preventDefault();
 
     const formData = new FormData(form.current!);
-    
-    if (operation === "update") {
-      
-
-      return;
-    }
 
     const params: Record<string, any> = {};
 
-    Object.keys(details).forEach(detail => {
-      const data = formData.get(detail);
-      let parsedData = formInputs.current.get(detail)?.type === "number" ? Number(data) : data;
+    Object.keys(details).forEach(tableColumn => {
+      const data = formData.get(tableColumn);
+      let parsedData = formInputs.current.get(tableColumn)?.type === "number" ? Number(data) : data;
       parsedData = parsedData || null;
 
-      const routeAPIMapper = APIParamsToTableColumns[route];
-
-      for (const [outerKey, outerValue] of Object.entries(routeAPIMapper)) {
-        if (outerValue === detail) params[outerKey] = parsedData;
-
-        if (typeof outerValue === "object" && outerValue !== null) {
-          for (const [innerKey, innerValue] of Object.entries(outerValue)) {
-            if (innerValue === detail) {
-              params[outerKey] = params[outerKey] ?? {};
-              params[outerKey][innerKey] = parsedData;
-            }
-          }
-        }
-      }
+      params[tableColumn] = parsedData;
     });
 
-    const data = await handleError(createData(route, params));
+    const data = await handleError(operation === "insert" ? createData(route, params) : updateData(route, params));
 
     if (data instanceof PromiseError) throw new Error(data.error);
 
@@ -153,6 +147,29 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
     );
   }
 
+  const inputJsxList = 
+    <ul>
+      {
+        Object.entries(details).map(([key, value], index) => 
+          <li key={key}>
+            {
+              operation !== "view" ?
+                <>
+                  <label className="column_name" htmlFor={key}>{columns[key]}</label>
+                  {modalInput(key, value!, index)} 
+                </> :
+                <>
+                  <h4 className="column_name">{columns[key]}</h4>
+                  {selectedItem && 
+                    <p>{selectedItem[key] instanceof Date ? selectedItem[key].toDateString() : selectedItem[key]}</p>
+                  }
+                </>
+            }
+          </li>
+        ) 
+      }
+    </ul>
+
   return (
     <dialog id="insert" ref={modal} {...props}>
       <h2>
@@ -161,30 +178,16 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
           operation === "update" ? "Update item" : "View item"
         }
       </h2>
-      <form action="POST" onSubmit={e => handleSubmit(e)} ref={form}>
-        <ul>
-          {
-            Object.entries(details).map(([key, value], index) => 
-              <li key={key}>
-                {
-                  operation !== "view" ?
-                    <>
-                      <label className="column_name" htmlFor={key}>{columns[key]}</label>
-                      {modalInput(key, value!, index)} 
-                    </> :
-                    <>
-                      <h4 className="column_name">{columns[key]}</h4>
-                      {selectedItem && 
-                        <p>{selectedItem[key] instanceof Date ? selectedItem[key].toDateString() : selectedItem[key]}</p>
-                      }
-                    </>
-                }
-              </li>
-            ) 
-          }
-        </ul>
-        <button type="submit">Submit</button>
-      </form>
+      {
+        operation !== "view" ?
+        <form action="POST" onSubmit={e => handleSubmit(e)} ref={form}>
+          <ul>{inputJsxList}</ul>
+          <button type="submit">Submit</button>
+        </form> :
+        <div>
+          <ul>{inputJsxList}</ul>
+        </div>
+      }
       <button className="close" onClick={() => modal.current!.close()}>Close</button>
     </dialog>
   )

@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { retrieveUserOperation, retrieveAllUserOperation, insertUserOperation, deleteUserOperations } from "../models/db.ts";
+import { retrieveUserOperation, retrieveAllUserOperation, insertUserOperation, deleteUserOperations, updateUserOperation } from "../models/db.ts";
 import { handleError, PromiseError } from "@packages/utils";
 import type { UUID } from "node:crypto";
 
@@ -42,6 +42,25 @@ export const createOperation: RequestHandler = async (req, res) => {
   }
 
   res.send("Created");
+}
+
+export const updateOperation: RequestHandler = async (req, res) => {
+  const id = req.params.userID as UUID;
+  const params = req.body; // Implement sanitization...
+
+  if (!id) {
+    res.status(400);
+    throw new Error("No user id provided.");
+  }
+
+  const operation = await handleError(updateUserOperation(params));
+
+  if (operation instanceof PromiseError) {
+    res.status(404);
+    throw new Error(operation.error);
+  }
+
+  res.send("Updated");
 }
 
 export const deleteOperations: RequestHandler = async (req, res) => {

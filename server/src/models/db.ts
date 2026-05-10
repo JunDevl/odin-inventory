@@ -22,10 +22,10 @@ const sql = postgres(`
   { ssl: true }
 );
 
-export const deleteUser = async(userUuid: UUID) => {
+export const deleteUser = async(user_id: UUID) => {
   const deleted = await handleError(sql`
     DELETE FROM users
-    WHERE user_id = ${userUuid}
+    WHERE user_id = ${user_id}
   `)
   
   if (deleted instanceof PromiseError) throw new Error(deleted.error);
@@ -195,13 +195,13 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
   return created;
 }
 
-export const retrieveUser = async (param: {email: string} | {userUuid: UUID}) => {
+export const retrieveUser = async (param: {email: string} | {user_id: UUID}) => {
   const user = await handleError('email' in param ? sql`
     SELECT * FROM users
     WHERE email = ${param.email}
   ` : sql`
     SELECT * FROM users
-    WHERE user_id = ${param.userUuid}
+    WHERE user_id = ${param.user_id}
   `)
 
   if (user instanceof PromiseError) throw new Error(user.error);
@@ -212,22 +212,22 @@ export const retrieveUser = async (param: {email: string} | {userUuid: UUID}) =>
 type EntityFranchiseID = {entityName: string, franchiseAddress: string};
 
 type insertOperationParams = {
-  userUuid: UUID,
+  user_id: UUID,
   addressee: EntityFranchiseID,
   sendee: EntityFranchiseID,
-  itemName: string, 
+  item_name: string, 
   quantity: number,
   unit: string,
-  priceCents: number | null,
+  price_cents: number | null,
   shippedAt?: Date | null,
   arrivedAt?: Date | null
 }
 
-export const deleteUserOperations = async(userUuid: UUID, operationIds: number[]) => {
+export const deleteUserOperations = async(user_id: UUID, operation_ids: number[]) => {
   const deleted = await handleError(sql`
     DELETE FROM operations
-    WHERE user_id = ${userUuid}
-    AND operation_id IN ${sql(operationIds)}
+    WHERE user_id = ${user_id}
+    AND operation_id IN ${sql(operation_ids)}
   `)
   
   if (deleted instanceof PromiseError) throw new Error(deleted.error);
@@ -235,24 +235,84 @@ export const deleteUserOperations = async(userUuid: UUID, operationIds: number[]
   return deleted;
 }
 
-export const insertUserOperation = async ({
-  userUuid, addressee, sendee, itemName, quantity, unit, priceCents, shippedAt, arrivedAt
-}: Omit<APICRUDParams["operations"], "operationId">) => {
-  const {entityName: addresseeEntityName, franchiseAddress: adresseeFranchiseAddress} = addressee;
+export const insertUserOperation = async (params: Omit<APICRUDParams["operations"], "operation_id">) => {
+  const {
+    user_id, addressee_entity_name, addressee_franchise_address, sendee_entity_name, sendee_franchise_address, item_name, quantity, unit_name, price_cents, shipped_at, arrived_at
+  } = params;
 
-  const {entityName: sendeeEntityName, franchiseAddress: sendeeFranchiseAddress} = sendee;
-
-  const priceHistory = await handleError(priceCents ? sql`
+  const priceHistory = await handleError(price_cents ? sql`
       INSERT INTO 
       items_unit_price_history (item_user_id, item_name, unit_user_id, unit_name, price_cents)
-      VALUES (${userUuid}, ${itemName}, ${userUuid}, ${unit}, ${priceCents})
+      VALUES (${user_id}, ${item_name}, ${user_id}, ${unit_name}, ${price_cents})
       RETURNING history_id;
     ` :
     sql`SELECT (history_id) FROM (
       SELECT MAX(priced_at) FROM items_unit_price_history
-      WHERE user_id = ${userUuid}
-      AND item_id = ${itemName}
+      WHERE user_id = ${user_id}
+      AND item_id = ${item_name}
   )`)
+
+  if (priceHistory instanceof PromiseError) {
+    await sql`ROLLBACK`
+    throw new Error(priceHistory.error);
+  }
+
+  const [row] = priceHistory;
+
+  if (!row) throw new Error("No price was registered for the specified item.")
+
+  const {history_id} = row;
+
+  params.history_id = history_id;
+
+  const created = await handleError(sql`
+    INSERT INTO operations ${sql(params, (Object.keys(params) as (keyof typeof params)[]))}
+  `);
+
+  /*
+    user_id, 
+    item_user_id, 
+    item_name,
+    unit_price_user_id,
+    unit_price_item_name,
+    unit_price_id,
+    quantity,
+    addressee_user_id,
+    addressee_entity_name,
+    addressee_franchise_address,
+    sendee_user_id,
+    sendee_entity_name,
+    sendee_franchise_address,
+    shipped_at,
+    arrived_at
+  */ 
+
+  if (created instanceof PromiseError) {
+    await sql`ROLLBACK`;
+    throw new Error(created.error);
+  }
+  
+  return created;
+}
+
+export const updateUserOperation = async (params: Partial<APICRUDParams["operations"]>) => {
+  const {user_id, operation_id} = params;
+  delete params.user_id, params.operation_id;
+
+  const {item_name, unit_name, price_cents} = params;
+
+  if (!user_id || !operation_id) throw new Error("Invalid arguments.");
+
+  const priceHistory = await handleError(price_cents && item_name && unit_name ? sql`
+      INSERT INTO 
+      items_unit_price_history (item_user_id, item_name, unit_user_id, unit_name, price_cents)
+      VALUES (${user_id}, ${item_name}, ${user_id}, ${unit_name}, ${price_cents})
+      RETURNING history_id;
+    ` :
+    sql`
+      SELECT history_id FROM operations
+      WHERE user_id = ${user_id} AND operation_id = ${operation_id}
+    `)
 
   if (priceHistory instanceof PromiseError) {
     await sql`ROLLBACK`
@@ -267,63 +327,49 @@ export const insertUserOperation = async ({
 
   const priceHistoryID = history_id;
 
-  const created = await handleError(sql`
-    INSERT INTO 
-    operations (
-      user_id, 
-      item_user_id, 
-      item_name,
-      unit_price_user_id,
-      unit_price_item_name,
-      unit_price_id,
-      quantity,
-      addressee_user_id,
-      addressee_entity_name,
-      addressee_franchise_address,
-      sendee_user_id,
-      sendee_entity_name,
-      sendee_franchise_address,
-      shipped_at,
-      arrived_at
-    )
-    VALUES (
-      ${userUuid},
-      ${userUuid},
-      ${itemName},
-      ${userUuid},
-      ${itemName},
-      ${priceHistoryID},
-      ${quantity},
-      ${userUuid},
-      ${addresseeEntityName},
-      ${adresseeFranchiseAddress},
-      ${userUuid},
-      ${sendeeEntityName},
-      ${sendeeFranchiseAddress},
-      ${shippedAt ?? null},
-      ${arrivedAt ?? null}
-    )
+  params.history_id = history_id;
+
+  const updated = await handleError(sql`
+    UPDATE operations 
+    SET 
+      ${sql(params, (Object.keys(params) as (keyof typeof params)[]))}
+    WHERE user_id = ${user_id} AND operation_id = ${operation_id}
   `);
 
-  if (created instanceof PromiseError) {
+  /* 
+    item_name = ${item_name},
+    unit_price_item_name = ${item_name},
+    unit_price_id = ${priceHistoryID},
+    quantity = ${quantity},
+    addressee_user_id = ${user_id},
+    addressee_entity_name = ${addressee_entity_name},
+    addressee_franchise_address = ${adresseeFranchiseAddress},
+    sendee_user_id = ${user_id},
+    sendee_entity_name = ${sendeeEntityName},
+    sendee_franchise_address = ${sendeeFranchiseAddress},
+    shipped_at = ${shippedAt ?? null},
+    arrived_at = ${arrivedAt ?? null}
+  */
+
+  if (updated instanceof PromiseError) {
     await sql`ROLLBACK`;
-    throw new Error(created.error);
+    throw new Error(updated.error);
   }
   
-  return created;
+  return updated;
 }
 
 const joinAllOperationsQuery = 
   `JOIN items i ON CONCAT(i.user_id, name) = CONCAT(operations.user_id, operations.item_name)
   JOIN items_unit_price_history p ON CONCAT(p.item_user_id, p.item_name, history_id) = CONCAT(operations.user_id, operations.unit_price_item_name, operations.unit_price_id)`
 
-export const retrieveUserOperation = async (userUuid: UUID, operationId: number, joinAll?: boolean) => {
+export const retrieveUserOperation = async (user_id: UUID, operation_id: number, joinAll?: boolean) => {
   const operation = await handleError(
     sql`
       SELECT * FROM operations_with_totals AS operations
       ${joinAll ? sql.unsafe(joinAllOperationsQuery) : sql.unsafe("")}
-      WHERE user_id = ${userUuid}
-      AND operation_id = ${operationId}
+      WHERE user_id = ${user_id}
+      AND operation_id = ${operation_id}
     `
   )
 
@@ -332,11 +378,11 @@ export const retrieveUserOperation = async (userUuid: UUID, operationId: number,
   return operation;
 }
 
-export const retrieveAllUserOperation = async (userUuid: UUID, joinAll?: boolean) => {
+export const retrieveAllUserOperation = async (user_id: UUID, joinAll?: boolean) => {
   const operations = await handleError(sql`
     SELECT * FROM operations_with_totals AS operations
     ${joinAll ? sql.unsafe(joinAllOperationsQuery) : sql.unsafe("")}
-    WHERE operations.user_id = ${userUuid}
+    WHERE operations.user_id = ${user_id}
   `)
 
   if (operations instanceof PromiseError) throw new Error(operations.error);
@@ -344,10 +390,10 @@ export const retrieveAllUserOperation = async (userUuid: UUID, joinAll?: boolean
   return operations;
 }
 
-export const deleteUserItems = async (userUuid: UUID, names: string[]) => {
+export const deleteUserItems = async (user_id: UUID, names: string[]) => {
   const deletedItem = await handleError(sql`
     DELETE FROM items
-    WHERE user_id = ${userUuid} 
+    WHERE user_id = ${user_id} 
     AND name IN ${sql(names)}
   `);
 
@@ -356,16 +402,16 @@ export const deleteUserItems = async (userUuid: UUID, names: string[]) => {
   return deletedItem;
 }
 
-export const insertUserItem = async ({userUuid, name, description, categoryName}: APICRUDParams["avaliable_items"]) => {
+export const insertUserItem = async ({user_id, name, description, category_name}: APICRUDParams["avaliable_items"]) => {
   const createdItem = await handleError(sql`
     INSERT INTO items (user_id, name, description)
-    VALUES (${userUuid}, ${name}, ${description ?? null})
+    VALUES (${user_id}, ${name}, ${description ?? null})
   `);
 
-  if (categoryName) {
+  if (category_name) {
     const categoryAdded = await handleError(sql`
       INSERT INTO categories_of_items (item_user_id, item_name, category_user_id, category_name)
-      VALUES (${userUuid}, ${name}, ${userUuid}, ${categoryName})
+      VALUES (${user_id}, ${name}, ${user_id}, ${category_name})
     `);
 
     if (categoryAdded instanceof PromiseError) throw new Error(categoryAdded.error);
@@ -376,25 +422,49 @@ export const insertUserItem = async ({userUuid, name, description, categoryName}
   return createdItem;
 }
 
+export const updateUserItem = async ({user_id, name, description, category_name}: Partial<APICRUDParams["avaliable_items"]>) => {
+  if (!user_id || !name) throw new Error("Invalid arguments.");
+
+  const updatedItem = await handleError(sql`
+    UPDATE items 
+    SET name = ${name}, 
+        description = ${description ?? null}
+    WHERE user_id = ${user_id} AND name = ${name}
+  `);
+
+  if (category_name) {
+    const categoryUpdated = await handleError(sql`
+      INSERT INTO categories_of_items (item_user_id, item_name, category_user_id, category_name)
+      VALUES (${user_id}, ${name}, ${user_id}, ${category_name})
+    `);
+
+    if (categoryUpdated instanceof PromiseError) throw new Error(categoryUpdated.error);
+  }
+
+  if (updatedItem instanceof PromiseError) throw new Error(updatedItem.error);
+
+  return updatedItem;
+}
+
 const joinItemCategoryQuery = 
   `LEFT JOIN categories_of_items c ON CONCAT(c.item_user_id, c.item_name) = CONCAT(items.user_id, items.name)`
 
-export const retrieveUserItem = async (userUuid: UUID, name: string, joinCategory?: boolean) => {
+export const retrieveUserItem = async (user_id: UUID, name: string, joinCategory?: boolean) => {
   const item = await handleError(sql`
     SELECT * FROM items
     ${joinCategory ? sql.unsafe(joinItemCategoryQuery) : sql.unsafe("")}
-    WHERE user_id = ${userUuid}
+    WHERE user_id = ${user_id}
     AND name = ${name}  
   `)
 
   return item;
 }
 
-export const retrieveAllUserItems = async (userUuid: UUID, joinCategory?: boolean) => {
+export const retrieveAllUserItems = async (user_id: UUID, joinCategory?: boolean) => {
   const items = await handleError(sql`
     SELECT * FROM items
     ${joinCategory ? sql.unsafe(joinItemCategoryQuery) : sql.unsafe("")}
-    WHERE user_id = ${userUuid}
+    WHERE user_id = ${user_id}
   `);
 
   if (items instanceof PromiseError) throw new Error(items.error);
@@ -402,10 +472,10 @@ export const retrieveAllUserItems = async (userUuid: UUID, joinCategory?: boolea
   return items;
 }
 
-export const deleteUserItemCategories = async (userUuid: UUID, names: string[]) => {
+export const deleteUserItemCategories = async (user_id: UUID, names: string[]) => {
   const deletedCategory = await handleError(sql`
     DELETE FROM item_categories
-    WHERE user_id = ${userUuid} 
+    WHERE user_id = ${user_id} 
     AND name IN ${sql(names)}
   `);
 
@@ -414,10 +484,10 @@ export const deleteUserItemCategories = async (userUuid: UUID, names: string[]) 
   return deletedCategory;
 }
 
-export const insertUserItemCategory = async ({userUuid, name, description}: APICRUDParams["item_categories"]) => {
+export const insertUserItemCategory = async ({user_id, name, description}: APICRUDParams["item_categories"]) => {
   const created = await handleError(sql`
     INSERT INTO item_categories (user_id, name, description)
-    VALUES (${userUuid}, ${name}, ${description ?? null})
+    VALUES (${user_id}, ${name}, ${description ?? null})
   `)
 
   if (created instanceof PromiseError) throw new Error(created.error);
@@ -425,11 +495,25 @@ export const insertUserItemCategory = async ({userUuid, name, description}: APIC
   return created;
 }
 
-export const retrieveUserItemCategory = async (userUuid: UUID, categoryName: string) => {
+export const updateUserItemCategory = async ({user_id, name, description}: Partial<APICRUDParams["item_categories"]>) => {
+  if (!user_id || !name) throw new Error("Invalid arguments.");
+
+  const updated = await handleError(sql`
+    UPDATE item_categories 
+    SET name = ${name}, 
+        description = ${description ?? null}
+    WHERE user_id = ${user_id} AND name = ${name}
+  `)
+
+  if (updated instanceof PromiseError) throw new Error(updated.error);
+
+  return updated;
+}
+
+export const retrieveUserItemCategory = async (user_id: UUID, categoryName: string) => {
   const category = await handleError(sql`
     SELECT * FROM item_categories
-    WHERE user_id = ${userUuid}
-    AND name = ${categoryName}
+    WHERE user_id = ${user_id} AND name = ${categoryName}
   `)
 
   if (category instanceof PromiseError) throw new Error(category.error);
@@ -437,10 +521,10 @@ export const retrieveUserItemCategory = async (userUuid: UUID, categoryName: str
   return category;
 }
 
-export const retrieveAllUserItemCategories = async (userUuid: UUID) => {
+export const retrieveAllUserItemCategories = async (user_id: UUID) => {
   const categories = await handleError(sql`
     SELECT * FROM item_categories
-    WHERE user_id = ${userUuid}
+    WHERE user_id = ${user_id}
   `)
 
   if (categories instanceof PromiseError) throw new Error(categories.error);
@@ -448,10 +532,10 @@ export const retrieveAllUserItemCategories = async (userUuid: UUID) => {
   return categories;
 }
 
-export const deleteUserItemUnits = async (userUuid: UUID, names: string[]) => {
+export const deleteUserItemUnits = async (user_id: UUID, names: string[]) => {
   const deletedUnit = await handleError(sql`
     DELETE FROM item_units
-    WHERE user_id = ${userUuid} 
+    WHERE user_id = ${user_id} 
     AND name IN ${sql(names)}
   `);
 
@@ -460,10 +544,10 @@ export const deleteUserItemUnits = async (userUuid: UUID, names: string[]) => {
   return deletedUnit;
 }
 
-export const insertUserItemUnit = async ({userUuid, name, description, wikipediaUrl}: APICRUDParams["item_units"]) => {
+export const insertUserItemUnit = async ({user_id, name, description, wikipedia_url}: APICRUDParams["item_units"]) => {
   const created = await handleError(sql`
     INSERT INTO item_units (user_id, name, description, wikipedia_url)
-    VALUES (${userUuid}, ${name}, ${description ?? null}, ${wikipediaUrl ?? null})
+    VALUES (${user_id}, ${name}, ${description ?? null}, ${wikipedia_url ?? null})
   `)
 
   if (created instanceof PromiseError) throw new Error(created.error);
@@ -471,10 +555,28 @@ export const insertUserItemUnit = async ({userUuid, name, description, wikipedia
   return created;
 }
 
-export const retrieveUserItemUnit = async (userUuid: UUID, unitName: string) => {
+export const updateUserItemUnit = async (params: Partial<APICRUDParams["item_units"]>) => {
+  const {user_id, name} = params;
+
+  if (!user_id || !name) throw new Error("Invalid params.");
+
+  delete params.user_id;
+
+  const updated = await handleError(sql`
+    UPDATE item_units 
+    SET ${sql(params, (Object.keys(params) as (keyof typeof params)[]))}
+    WHERE user_id = ${user_id} AND name = ${name}
+  `)
+
+  if (updated instanceof PromiseError) throw new Error(updated.error);
+
+  return updated;
+}
+
+export const retrieveUserItemUnit = async (user_id: UUID, unitName: string) => {
   const unit = await handleError(sql`
     SELECT * FROM item_units
-    WHERE user_id = ${userUuid}
+    WHERE user_id = ${user_id}
     AND name = ${unitName}
   `)
 
@@ -483,10 +585,10 @@ export const retrieveUserItemUnit = async (userUuid: UUID, unitName: string) => 
   return unit;
 }
 
-export const retrieveAllUserItemUnits = async (userUuid: UUID) => {
+export const retrieveAllUserItemUnits = async (user_id: UUID) => {
   const units = await handleError(sql`
     SELECT * FROM item_units
-    WHERE user_id = ${userUuid}
+    WHERE user_id = ${user_id}
   `)
 
   if (units instanceof PromiseError) throw new Error(units.error);
@@ -494,10 +596,10 @@ export const retrieveAllUserItemUnits = async (userUuid: UUID) => {
   return units;
 }
 
-export const deleteUserEntityFranchises = async (userUuid: UUID, names: string[]) => {
+export const deleteUserEntityFranchises = async (user_id: UUID, names: string[]) => {
   const deletedEntity = await handleError(sql`
     DELETE FROM entities
-    WHERE user_id = ${userUuid} 
+    WHERE user_id = ${user_id} 
     AND name IN ${sql(names)}
   `);
 
@@ -506,21 +608,18 @@ export const deleteUserEntityFranchises = async (userUuid: UUID, names: string[]
   return deletedEntity;
 }
 
-export const insertUserEntityFranchise = async ({userUuid, name, address, trade}: APICRUDParams["entities"]) => {
+export const insertUserEntityFranchise = async ({entity_user_id, entity_name, address, trade}: APICRUDParams["entities"]) => {
   const createdEntity = await handleError(sql`
     INSERT INTO entities (user_id, name, trade)
-    VALUES (${userUuid}, ${name}, ${trade ?? null})
+    VALUES (${entity_user_id}, ${entity_name}, ${trade ?? null})
     RETURNING entity_id
   `)
 
   if (createdEntity instanceof PromiseError) throw new Error(createdEntity.error);
 
-  const [entityRow] = createdEntity;
-  const {entity_name} = entityRow!;
-
   const createdFranchise = await handleError(sql`
     INSERT INTO entities_ranchises (user_id, entity_name, address)
-    VALUES (${userUuid}, ${entity_name}, ${address})
+    VALUES (${entity_user_id}, ${entity_name}, ${address})
     RETURNING (user_id, franchise_id)
   `)
 
@@ -532,15 +631,42 @@ export const insertUserEntityFranchise = async ({userUuid, name, address, trade}
   return createdFranchise;
 }
 
+export const updateUserEntityFranchise = async ({entity_user_id, entity_name, address, trade}: Partial<APICRUDParams["entities"]>) => {
+  if (!entity_user_id || !entity_name || !address) throw new Error("Invalid arguments.");
+
+  const updatedEntity = await handleError(sql`
+    UPDATE entities 
+    SET ${trade ? sql`name = ${entity_name}, trade = ${trade}` : sql`name = ${entity_name}`}
+    WHERE user_id = ${entity_user_id} AND name = ${entity_name}
+  `)
+
+  if (updatedEntity instanceof PromiseError) throw new Error(updatedEntity.error);
+
+  const updatedFranchise = await handleError(sql`
+    UPDATE entities_ranchises 
+    SET entity_name = ${entity_name}, address = ${address}
+    WHERE entity_user_id = ${entity_user_id} AND
+          entity_name = ${entity_name} AND
+          address = ${address}
+  `)
+
+  if (updatedFranchise instanceof PromiseError) {
+    await sql`ROLLBACK`;
+    throw new Error(updatedFranchise.error);
+  }
+
+  return updatedFranchise;
+}
+
 const joinFranchiseOfType = 
   `LEFT JOIN outsourced_entity_franchise_types t ON CONCAT(t.franchise_user_id, t.entity_name, t.franchise_address) = CONCAT(f.entity_user_id, f.entity_name, f.address)`
 
-export const retrieveUserEntityFranchise = async (userUuid: UUID, entityName: string, address: string, joinType?: boolean) => {
+export const retrieveUserEntityFranchise = async (user_id: UUID, entityName: string, address: string, joinType?: boolean) => {
   const entityFranchise = await handleError(sql`
     SELECT entities.*, f.*, t.type FROM entities
     JOIN entities_franchises f ON CONCAT(f.entity_user_id, f.entity_name, f.address) = CONCAT(entities.user_id, entities.entity_name, ${address})
     ${joinType ? sql.unsafe(joinFranchiseOfType) : sql.unsafe("")}
-    WHERE user_id = ${userUuid}
+    WHERE user_id = ${user_id}
     AND entity_name = ${entityName}
   `)
 
@@ -549,13 +675,13 @@ export const retrieveUserEntityFranchise = async (userUuid: UUID, entityName: st
   return entityFranchise;
 }
 
-export const retrieveAllUserEntityFranchises = async (userUuid: UUID, joinType?: boolean) => {
+export const retrieveAllUserEntityFranchises = async (user_id: UUID, joinType?: boolean) => {
   const entitiesFranchises = await handleError(sql`
     SELECT entities.*, f.*, t.type FROM entities
     JOIN entities_franchises f 
     ON CONCAT(f.entity_user_id, f.entity_name) = CONCAT(entities.user_id, entities.name)
     ${joinType ? sql.unsafe(joinFranchiseOfType) : sql.unsafe("")}
-    WHERE user_id = ${userUuid}
+    WHERE user_id = ${user_id}
   `);
 
   if (entitiesFranchises instanceof PromiseError) throw new Error(entitiesFranchises.error);
@@ -563,10 +689,10 @@ export const retrieveAllUserEntityFranchises = async (userUuid: UUID, joinType?:
   return entitiesFranchises;
 }
 
-export const addTypeToEntityFranchise = async (userUuid: UUID, entityName: number, address: number, type: EntityType) => {
+export const addTypeToEntityFranchise = async (user_id: UUID, entityName: number, address: number, type: EntityType) => {
   const created = await handleError(sql`
     INSERT INTO ${sql(`outsourced_${type}_entity_franchises`)} 
-    VALUES (${userUuid}, ${entityName}, ${address})
+    VALUES (${user_id}, ${entityName}, ${address})
   `)
 
   if (created instanceof PromiseError) throw new Error(created.error);
@@ -574,11 +700,11 @@ export const addTypeToEntityFranchise = async (userUuid: UUID, entityName: numbe
   return created;
 }
 
-export const retrieveAllUserEntityFranchisesOfType = async (userUuid: UUID, type: EntityType) => {
+export const retrieveAllUserEntityFranchisesOfType = async (user_id: UUID, type: EntityType) => {
   const entitiesFranchises = await handleError(sql`
     SELECT * FROM entities_franchises
     JOIN outsourced_entity_franchise_types t
-    ON CONCAT(t.user_id, t.entity_name, t.franchise_address) = CONCAT(${userUuid}, entities_franchises.entity_name, entities_franchises.address)
+    ON CONCAT(t.user_id, t.entity_name, t.franchise_address) = CONCAT(${user_id}, entities_franchises.entity_name, entities_franchises.address)
     WHERE t.type = ${type}
   `)
 

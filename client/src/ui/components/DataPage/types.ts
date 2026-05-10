@@ -1,7 +1,9 @@
-import type { RouteTableMapping, DataRoute } from "@packages/utils";
+import type { DataRoute, APICRUDParams } from "@packages/utils";
 import { queryOptions } from "../../../queries";
 
-export type TableData = RouteTableMapping[keyof RouteTableMapping];
+export type TableData = APICRUDParams[keyof APICRUDParams];
+
+type aoba = APICRUDParams["operations"]["user_id"];
 
 type Primitive = "string" | "number" | "boolean" | DateConstructor;
 type InputTypeAttribute = Primitive | [Primitive, "list"];
@@ -10,13 +12,14 @@ type PlaceholderBehavior = "blank" | "auto";
 type InputType<T extends InputTypeAttribute> = {
   type: T,
   placeholder: PlaceholderBehavior,
+  list?: any[],
   notMandatory?: boolean
 };
 
 type InputQueryable = {
   [K in DataRoute]: InputType<InputTypeAttribute> & {
     listQueryOptions: (typeof queryOptions)[K],
-    relatedColumnKey: keyof RouteTableMapping[K]
+    relatedColumnKey: keyof APICRUDParams[K]
   }
 }[DataRoute];
 

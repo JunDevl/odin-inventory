@@ -69,7 +69,7 @@ export const deleteUserController: RequestHandler = async (req, res) => {
     throw new Error("Invalid parameters.");
   }
 
-  const dbRecord = await handleError(retrieveUser({userUuid: id}));
+  const dbRecord = await handleError(retrieveUser({user_id: id}));
 
   if (dbRecord instanceof PromiseError) {
     res.status(404);
