@@ -27,14 +27,14 @@ export const getItemUnit: RequestHandler = async (req, res) => {
 
 export const createItemUnit: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const newData = req.body; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const unit = await handleError(insertUserItemUnit(params));
+  const unit = await handleError(insertUserItemUnit(id, newData));
 
   if (unit instanceof PromiseError) {
     res.status(404);
@@ -46,14 +46,15 @@ export const createItemUnit: RequestHandler = async (req, res) => {
 
 export const updateItemUnit: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const {name} = req.body.old; // Implement sanitization...
+  const newData = req.body.new; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const unit = await handleError(updateUserItemUnit(params));
+  const unit = await handleError(updateUserItemUnit(id, name, newData));
 
   if (unit instanceof PromiseError) {
     res.status(404);
@@ -106,14 +107,14 @@ export const getItemCategory: RequestHandler = async (req, res) => {
 
 export const createItemCategory: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const newData = req.body; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const category = await handleError(insertUserItemCategory(params));
+  const category = await handleError(insertUserItemCategory(id, newData));
 
   if (category instanceof PromiseError) {
     res.status(404);
@@ -125,14 +126,15 @@ export const createItemCategory: RequestHandler = async (req, res) => {
 
 export const updateItemCategory: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const {name} = req.body.old; // Implement sanitization...
+  const newData = req.body.new; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const category = await handleError(updateUserItemCategory(params));
+  const category = await handleError(updateUserItemCategory(id, name, newData));
 
   if (category instanceof PromiseError) {
     res.status(404);
@@ -185,14 +187,14 @@ export const getAvaliableItem: RequestHandler = async (req, res) => {
 
 export const createAvaliableItem: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const newData = req.body; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const item = await handleError(insertUserItem(params));
+  const item = await handleError(insertUserItem(id, newData));
 
   if (item instanceof PromiseError) {
     res.status(404);
@@ -204,14 +206,15 @@ export const createAvaliableItem: RequestHandler = async (req, res) => {
 
 export const updateAvaliableItem: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const {name} = req.body.old; // Implement sanitization...
+  const newData = req.body.new; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const item = await handleError(updateUserItem(params));
+  const item = await handleError(updateUserItem(id, name, newData));
 
   if (item instanceof PromiseError) {
     res.status(404);

@@ -13,7 +13,7 @@ import Table from "../Table/Table";
 type DataPageProps<T extends DataRoute> = {
   title: string,
   dataRoute: T,
-  identifier: {key: keyof Omit<APICRUDParams[T], `${string}user_id`>, type: "number" | "name"};
+  identifier: {keys: Array<keyof APICRUDParams[T]>, type: "number" | "name"};
   requiredInputColumnTypes: {
     [TableColumn in keyof APICRUDParams[T]]?: InputDetail
   },
@@ -45,15 +45,15 @@ const DataPage = <T extends DataRoute>({
   const [viewedItem, setViewedItem] = useState<APICRUDParams[T]>(data[0]);
 
   const deleteRows = async () => {
-    const params: any[] = [];
+    const targetData: any[] = [];
 
     const selectedData = selectedIndexes.map(index => data[index]);
 
-    const {key, type} = identifier;
+    const {keys, type} = identifier;
 
-    selectedData.forEach(data => params.push(data[key as keyof APICRUDParams[T]]))
+    selectedData.forEach(data => targetData.push(keys.map(key => data[key])));
 
-    const deleted = await handleError(batchDeleteData(dataRoute, type, params));
+    const deleted = await handleError(batchDeleteData(dataRoute, type, targetData));
 
     if (deleted instanceof PromiseError) throw new Error(deleted.error);
 

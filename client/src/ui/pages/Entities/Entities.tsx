@@ -5,7 +5,7 @@ const Entities = () => {
     <DataPage 
       title="Entities" 
       dataRoute="entities"
-      identifier={{key: "entity_name", type: "name"}}
+      identifier={{keys: ["entity_name", "address"], type: "name"}}
       requiredInputColumnTypes={{
         entity_name: {type: "string", placeholder: "blank"},
         trade: {type: "string", placeholder: "blank", notMandatory: true},

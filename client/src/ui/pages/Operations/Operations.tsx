@@ -6,7 +6,7 @@ const Operations = () => {
     <DataPage 
       title="Operations" 
       dataRoute="operations"
-      identifier={{key: "operation_id", type: "number"}}
+      identifier={{keys: ["operation_id"], type: "number"}}
       requiredInputColumnTypes={{
         item_name: {
           type: ["string", "list"], 

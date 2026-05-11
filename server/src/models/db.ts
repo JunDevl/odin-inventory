@@ -195,13 +195,11 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
   return created;
 }
 
-export const retrieveUser = async (param: {email: string} | {user_id: UUID}) => {
-  const user = await handleError('email' in param ? sql`
+export const retrieveUser = async (userIdentifier: {email: string} | {user_id: UUID}) => {
+
+  const user = await handleError(sql`
     SELECT * FROM users
-    WHERE email = ${param.email}
-  ` : sql`
-    SELECT * FROM users
-    WHERE user_id = ${param.user_id}
+    WHERE ${sql(userIdentifier, (Object.keys(userIdentifier) as (keyof typeof userIdentifier)[]))}
   `)
 
   if (user instanceof PromiseError) throw new Error(user.error);
@@ -235,10 +233,10 @@ export const deleteUserOperations = async(user_id: UUID, operation_ids: number[]
   return deleted;
 }
 
-export const insertUserOperation = async (params: Omit<APICRUDParams["operations"], "operation_id">) => {
+export const insertUserOperation = async (user_id: UUID, newOperation: Omit<APICRUDParams["operations"], "operation_id" | "user_id">) => {
   const {
-    user_id, addressee_entity_name, addressee_franchise_address, sendee_entity_name, sendee_franchise_address, item_name, quantity, unit_name, price_cents, shipped_at, arrived_at
-  } = params;
+    addressee_entity_name, addressee_franchise_address, sendee_entity_name, sendee_franchise_address, item_name, quantity, unit_name, price_cents, shipped_at, arrived_at
+  } = newOperation;
 
   const priceHistory = await handleError(price_cents ? sql`
       INSERT INTO 
@@ -263,10 +261,10 @@ export const insertUserOperation = async (params: Omit<APICRUDParams["operations
 
   const {history_id} = row;
 
-  params.history_id = history_id;
+  newOperation.history_id = history_id;
 
   const created = await handleError(sql`
-    INSERT INTO operations ${sql(params, (Object.keys(params) as (keyof typeof params)[]))}
+    INSERT INTO operations ${sql(newOperation, (Object.keys(newOperation) as (keyof typeof newOperation)[]))}
   `);
 
   /*
@@ -295,13 +293,10 @@ export const insertUserOperation = async (params: Omit<APICRUDParams["operations
   return created;
 }
 
-export const updateUserOperation = async (params: Partial<APICRUDParams["operations"]>) => {
-  const {user_id, operation_id} = params;
-  delete params.user_id, params.operation_id;
+export const updateUserOperation = async (user_id: UUID, operation_id: number, newOperation: Partial<APICRUDParams["operations"]>) => {
+  delete newOperation.user_id, newOperation.operation_id;
 
-  const {item_name, unit_name, price_cents} = params;
-
-  if (!user_id || !operation_id) throw new Error("Invalid arguments.");
+  const {item_name, unit_name, price_cents} = newOperation;
 
   const priceHistory = await handleError(price_cents && item_name && unit_name ? sql`
       INSERT INTO 
@@ -325,14 +320,12 @@ export const updateUserOperation = async (params: Partial<APICRUDParams["operati
 
   const {history_id} = row;
 
-  const priceHistoryID = history_id;
-
-  params.history_id = history_id;
+  newOperation.history_id = history_id;
 
   const updated = await handleError(sql`
     UPDATE operations 
     SET 
-      ${sql(params, (Object.keys(params) as (keyof typeof params)[]))}
+      ${sql(newOperation, (Object.keys(newOperation) as (keyof typeof newOperation)[]))}
     WHERE user_id = ${user_id} AND operation_id = ${operation_id}
   `);
 
@@ -402,7 +395,7 @@ export const deleteUserItems = async (user_id: UUID, names: string[]) => {
   return deletedItem;
 }
 
-export const insertUserItem = async ({user_id, name, description, category_name}: APICRUDParams["avaliable_items"]) => {
+export const insertUserItem = async (user_id: UUID, {name, description, category_name}: APICRUDParams["avaliable_items"]) => {
   const createdItem = await handleError(sql`
     INSERT INTO items (user_id, name, description)
     VALUES (${user_id}, ${name}, ${description ?? null})
@@ -422,20 +415,26 @@ export const insertUserItem = async ({user_id, name, description, category_name}
   return createdItem;
 }
 
-export const updateUserItem = async ({user_id, name, description, category_name}: Partial<APICRUDParams["avaliable_items"]>) => {
-  if (!user_id || !name) throw new Error("Invalid arguments.");
+export const updateUserItem = async (user_id: UUID, old_name: string, newItem: Partial<APICRUDParams["avaliable_items"]>) => {
+  const {category_name} = newItem;
+
+  delete newItem.user_id;
+
+  const item = {name: newItem.name, description: newItem.description};
 
   const updatedItem = await handleError(sql`
     UPDATE items 
-    SET name = ${name}, 
-        description = ${description ?? null}
-    WHERE user_id = ${user_id} AND name = ${name}
+    SET ${sql(item, (Object.keys(item) as (keyof typeof item)[]))}
+    WHERE user_id = ${user_id} AND name = ${old_name}
   `);
+
+  const categoryParams = {item_name: newItem.name, category_name}
 
   if (category_name) {
     const categoryUpdated = await handleError(sql`
-      INSERT INTO categories_of_items (item_user_id, item_name, category_user_id, category_name)
-      VALUES (${user_id}, ${name}, ${user_id}, ${category_name})
+      UPDATE categories_of_items 
+      SET ${sql(categoryParams, (Object.keys(categoryParams) as (keyof typeof categoryParams)[]))}
+      WHERE item_user_id = ${user_id} AND item_name = ${old_name}
     `);
 
     if (categoryUpdated instanceof PromiseError) throw new Error(categoryUpdated.error);
@@ -484,7 +483,7 @@ export const deleteUserItemCategories = async (user_id: UUID, names: string[]) =
   return deletedCategory;
 }
 
-export const insertUserItemCategory = async ({user_id, name, description}: APICRUDParams["item_categories"]) => {
+export const insertUserItemCategory = async (user_id: UUID, {name, description}: APICRUDParams["item_categories"]) => {
   const created = await handleError(sql`
     INSERT INTO item_categories (user_id, name, description)
     VALUES (${user_id}, ${name}, ${description ?? null})
@@ -495,14 +494,13 @@ export const insertUserItemCategory = async ({user_id, name, description}: APICR
   return created;
 }
 
-export const updateUserItemCategory = async ({user_id, name, description}: Partial<APICRUDParams["item_categories"]>) => {
-  if (!user_id || !name) throw new Error("Invalid arguments.");
-
+export const updateUserItemCategory = async (user_id: UUID, old_name: string, newCategory: Partial<APICRUDParams["item_categories"]>) => {
+  delete newCategory.user_id;
+  
   const updated = await handleError(sql`
     UPDATE item_categories 
-    SET name = ${name}, 
-        description = ${description ?? null}
-    WHERE user_id = ${user_id} AND name = ${name}
+    SET ${sql(newCategory, (Object.keys(newCategory) as (keyof typeof newCategory)[]))}
+    WHERE user_id = ${user_id} AND name = ${old_name}
   `)
 
   if (updated instanceof PromiseError) throw new Error(updated.error);
@@ -544,7 +542,7 @@ export const deleteUserItemUnits = async (user_id: UUID, names: string[]) => {
   return deletedUnit;
 }
 
-export const insertUserItemUnit = async ({user_id, name, description, wikipedia_url}: APICRUDParams["item_units"]) => {
+export const insertUserItemUnit = async (user_id: UUID, {name, description, wikipedia_url}: APICRUDParams["item_units"]) => {
   const created = await handleError(sql`
     INSERT INTO item_units (user_id, name, description, wikipedia_url)
     VALUES (${user_id}, ${name}, ${description ?? null}, ${wikipedia_url ?? null})
@@ -555,17 +553,13 @@ export const insertUserItemUnit = async ({user_id, name, description, wikipedia_
   return created;
 }
 
-export const updateUserItemUnit = async (params: Partial<APICRUDParams["item_units"]>) => {
-  const {user_id, name} = params;
-
-  if (!user_id || !name) throw new Error("Invalid params.");
-
-  delete params.user_id;
+export const updateUserItemUnit = async (user_id: UUID, old_name: string, newUnit: Partial<APICRUDParams["item_units"]>) => {
+  delete newUnit.user_id;
 
   const updated = await handleError(sql`
     UPDATE item_units 
-    SET ${sql(params, (Object.keys(params) as (keyof typeof params)[]))}
-    WHERE user_id = ${user_id} AND name = ${name}
+    SET ${sql(newUnit, (Object.keys(newUnit) as (keyof typeof newUnit)[]))}
+    WHERE user_id = ${user_id} AND name = ${old_name}
   `)
 
   if (updated instanceof PromiseError) throw new Error(updated.error);
@@ -608,10 +602,10 @@ export const deleteUserEntityFranchises = async (user_id: UUID, names: string[])
   return deletedEntity;
 }
 
-export const insertUserEntityFranchise = async ({entity_user_id, entity_name, address, trade}: APICRUDParams["entities"]) => {
+export const insertUserEntityFranchise = async (user_id: UUID, {entity_name, address, trade}: APICRUDParams["entities"]) => {
   const createdEntity = await handleError(sql`
     INSERT INTO entities (user_id, name, trade)
-    VALUES (${entity_user_id}, ${entity_name}, ${trade ?? null})
+    VALUES (${user_id}, ${entity_name}, ${trade ?? null})
     RETURNING entity_id
   `)
 
@@ -619,7 +613,7 @@ export const insertUserEntityFranchise = async ({entity_user_id, entity_name, ad
 
   const createdFranchise = await handleError(sql`
     INSERT INTO entities_ranchises (user_id, entity_name, address)
-    VALUES (${entity_user_id}, ${entity_name}, ${address})
+    VALUES (${user_id}, ${entity_name}, ${address})
     RETURNING (user_id, franchise_id)
   `)
 
@@ -631,23 +625,27 @@ export const insertUserEntityFranchise = async ({entity_user_id, entity_name, ad
   return createdFranchise;
 }
 
-export const updateUserEntityFranchise = async ({entity_user_id, entity_name, address, trade}: Partial<APICRUDParams["entities"]>) => {
-  if (!entity_user_id || !entity_name || !address) throw new Error("Invalid arguments.");
+export const updateUserEntityFranchise = async (user_id: UUID, {old_entity_name, old_address}: {old_entity_name: string, old_address: string}, newEntityFranchise: Partial<APICRUDParams["entities"]>) => {
+  delete newEntityFranchise.entity_user_id;
+
+  const entity = {trade: newEntityFranchise.trade, entity_name: newEntityFranchise.entity_name}
 
   const updatedEntity = await handleError(sql`
     UPDATE entities 
-    SET ${trade ? sql`name = ${entity_name}, trade = ${trade}` : sql`name = ${entity_name}`}
-    WHERE user_id = ${entity_user_id} AND name = ${entity_name}
+    SET ${sql(entity, (Object.keys(entity) as (keyof typeof entity)[]))}
+    WHERE user_id = ${user_id} AND name = ${old_entity_name}
   `)
 
   if (updatedEntity instanceof PromiseError) throw new Error(updatedEntity.error);
-
+  
+  const franchise = {entity_name: newEntityFranchise.entity_name, address: newEntityFranchise.address};
+  
   const updatedFranchise = await handleError(sql`
     UPDATE entities_ranchises 
-    SET entity_name = ${entity_name}, address = ${address}
-    WHERE entity_user_id = ${entity_user_id} AND
-          entity_name = ${entity_name} AND
-          address = ${address}
+    SET ${sql(franchise, (Object.keys(franchise) as (keyof typeof franchise)[]))}
+    WHERE entity_user_id = ${user_id} AND
+          entity_name = ${old_entity_name} AND
+          address = ${old_address}
   `)
 
   if (updatedFranchise instanceof PromiseError) {

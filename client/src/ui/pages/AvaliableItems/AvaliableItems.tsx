@@ -6,7 +6,7 @@ const AvaliableItems = () => {
     <DataPage 
       title="Avaliable Items" 
       dataRoute="avaliable_items"
-      identifier={{key: "name", type: "name"}}
+      identifier={{keys: ["name"], type: "name"}}
       requiredInputColumnTypes={{
         name: {type: "string", placeholder: "blank"},
         description: {type: "string", placeholder: "blank", notMandatory: true},

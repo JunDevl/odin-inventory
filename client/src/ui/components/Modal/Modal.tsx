@@ -10,27 +10,24 @@ import Checkbox from "../Checkbox/Checkbox";
 import { createData, updateData } from "../../../actions";
 import { useQueryClient } from "@tanstack/react-query";
 
-type ModalProps = DialogHTMLAttributes<HTMLDialogElement> & {
+type ModalProps<T extends DataRoute> = DialogHTMLAttributes<HTMLDialogElement> & {
   details: {
     [TableColumn in keyof TableData | (string & {})]?: InputDetail
   },
   columns: {
-    [RequiredColumn in keyof ModalProps["details"]]: string
+    [RequiredColumn in keyof ModalProps<T>["details"]]: string
   },
-  route: DataRoute
+  route: T
   ref?: RefObject<HTMLDialogElement | null>
 } & ({
   operation: "insert",
-  selectedItem?: undefined
+  selectedItem?: null
 } | {
-  operation: "update",
-  selectedItem: Record<string, any>
-} | {
-  operation: "view",
-  selectedItem: Record<string, any> | null
+  operation: "update" | "view",
+  selectedItem: APICRUDParams[T]
 })
 
-const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}: ModalProps) => {
+const Modal = <T extends DataRoute ,>({details, columns, route, ref, operation, selectedItem, ...props}: ModalProps<T>) => {
   const queryClient = useQueryClient();
   
   const modal = ref ?? useRef<HTMLDialogElement>(null);
@@ -40,7 +37,7 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
   const modalInput = (key: keyof typeof details, detail: InputDetail, index: number) => {
     const dataType = detail.type instanceof Array ? detail.type[0] : detail.type;
     const required = !detail.notMandatory;
-    const initialValue = selectedItem ? selectedItem[key] : "";
+    const initialValue: any = selectedItem ? selectedItem[key as keyof APICRUDParams[T]] : "";
 
     switch (dataType) {
       case "boolean": 
@@ -58,7 +55,7 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
           name={key} 
           id={key} 
           ref={element => {formInputs.current.set(key, element as HTMLInputElement)}} 
-          defaultValue={initialValue}
+          defaultValue={initialValue as any}
           required={required}
         />
       case "string": {
@@ -69,7 +66,7 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
             <Dropdown 
               name={key}
               id={key}
-              queryOptions={queryOptions}
+              queryOptions={queryOptions as any}
               route={route}
               column={column as keyof APICRUDParams[typeof route]} 
               ref={element => {formInputs.current.set(key, element as HTMLSelectElement)}}
@@ -126,17 +123,28 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
 
     const formData = new FormData(form.current!);
 
-    const params: Record<string, any> = {};
+    let newData: APICRUDParams[typeof route] = {} as any;
 
     Object.keys(details).forEach(tableColumn => {
       const data = formData.get(tableColumn);
-      let parsedData = formInputs.current.get(tableColumn)?.type === "number" ? Number(data) : data;
-      parsedData = parsedData || null;
 
-      params[tableColumn] = parsedData;
+      let parsedValue;
+
+      switch (formInputs.current.get(tableColumn)?.type!) {
+        case "number": parsedValue = Number(data); break;
+        case "checkbox": parsedValue = Boolean(data); break;
+        default: parsedValue = String(data);
+      }
+      parsedValue = parsedValue || null;
+
+      (newData as any)[tableColumn] = parsedValue;
     });
 
-    const data = await handleError(operation === "insert" ? createData(route, params) : updateData(route, params));
+    const data = await handleError(
+      operation === "insert" ? 
+        createData(route, newData) : 
+        updateData(route, selectedItem, newData)
+    )
 
     if (data instanceof PromiseError) throw new Error(data.error);
 
@@ -161,7 +169,11 @@ const Modal = ({details, columns, route, ref, operation, selectedItem, ...props}
                 <>
                   <h4 className="column_name">{columns[key]}</h4>
                   {selectedItem && 
-                    <p>{selectedItem[key] instanceof Date ? selectedItem[key].toDateString() : selectedItem[key]}</p>
+                    <p>
+                      {selectedItem[key as keyof APICRUDParams[T]] instanceof Date ? 
+                        (selectedItem[key as keyof APICRUDParams[T]] as any).toDateString() : 
+                        selectedItem[key as keyof APICRUDParams[T]]}
+                      </p>
                   }
                 </>
             }

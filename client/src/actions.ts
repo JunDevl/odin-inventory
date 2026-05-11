@@ -72,14 +72,14 @@ export const fetchAll = async <T extends DataRoute>(route: T) => {
   return res as APICRUDParams[typeof route][];
 }
 
-export const createData = async <T extends DataRoute>(route: T, param: Omit<APICRUDParams[T], "user_id">) => {
+export const createData = async <T extends DataRoute>(route: T, newData: APICRUDParams[T]) => {
   const userID = localStorage.getItem("userUUID") as UUID;
 
-  Object.keys(param).forEach(paramKey => {
-    if (paramKey.includes("cents")) (param[paramKey as keyof typeof param] as number) *= 100;
+  Object.keys(newData).forEach(key => {
+    if (key.includes("cents")) (newData[key as keyof typeof newData] as number) *= 100;
   })
 
-  const body = JSON.stringify({user_id: userID, ...param});
+  const body = JSON.stringify(newData);
   const uri = dataRouteURI(route, userID);
 
   const postData = await fetch(uri, { 
@@ -95,14 +95,14 @@ export const createData = async <T extends DataRoute>(route: T, param: Omit<APIC
   return createdOK;
 }
 
-export const updateData = async <T extends DataRoute>(route: T, param: Omit<APICRUDParams[T], "user_id">) => {
+export const updateData = async <T extends DataRoute>(route: T, oldData: Record<string, any>, newData: APICRUDParams[T]) => {
   const userID = localStorage.getItem("userUUID") as UUID;
 
-  Object.keys(param).forEach(paramKey => {
-    if (paramKey.includes("cents")) (param[paramKey as keyof typeof param] as number) *= 100;
+  Object.keys(newData).forEach(key => {
+    if (key.includes("cents")) (newData[key as keyof typeof newData] as number) *= 100;
   })
 
-  const body = JSON.stringify({user_id: userID, ...param});
+  const body = JSON.stringify({old: oldData, new: newData});
   const uri = dataRouteURI(route, userID);
 
   const putData = await fetch(uri, { 
@@ -118,10 +118,10 @@ export const updateData = async <T extends DataRoute>(route: T, param: Omit<APIC
   return updatedOK;
 }
 
-export const batchDeleteData = async <T extends DataRoute>(route: T, type: "number" | "name", params: APICRUDParams[T][keyof Omit<APICRUDParams[T], "user_id">][]) => {
+export const batchDeleteData = async <T extends DataRoute>(route: T, type: "number" | "name", targetData: APICRUDParams[T][keyof APICRUDParams[T]][]) => {
   const userID = localStorage.getItem("userUUID") as UUID;
 
-  const uri = dataRouteURI(route, userID) + `?${type === "name" ? "names" : "ids"}=${params}`;
+  const uri = dataRouteURI(route, userID) + `?${type === "name" ? "names" : "ids"}=${targetData}`;
 
   const postData = await fetch(uri, { 
     method: "DELETE",

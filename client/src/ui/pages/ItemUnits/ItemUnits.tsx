@@ -5,7 +5,7 @@ const ItemUnits = () => {
     <DataPage 
       title="Item Units" 
       dataRoute="item_units"
-      identifier={{key: "name", type: "name"}}
+      identifier={{keys: ["name"], type: "name"}}
       requiredInputColumnTypes={{
         name: {type: "string", placeholder: "blank"},
         description: {type: "string", placeholder: "blank", notMandatory: true},

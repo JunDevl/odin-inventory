@@ -27,14 +27,14 @@ export const getOperation: RequestHandler = async (req, res) => {
 
 export const createOperation: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const newData = req.body; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const operation = await handleError(insertUserOperation(params));
+  const operation = await handleError(insertUserOperation(id, newData));
 
   if (operation instanceof PromiseError) {
     res.status(404);
@@ -46,14 +46,15 @@ export const createOperation: RequestHandler = async (req, res) => {
 
 export const updateOperation: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const {operation_id} = req.body.old;
+  const newData = req.body.new; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const operation = await handleError(updateUserOperation(params));
+  const operation = await handleError(updateUserOperation(id, operation_id, newData));
 
   if (operation instanceof PromiseError) {
     res.status(404);
@@ -64,10 +65,10 @@ export const updateOperation: RequestHandler = async (req, res) => {
 }
 
 export const deleteOperations: RequestHandler = async (req, res) => {
-  const userId = req.params.userID as UUID;
-  const ids = (req.query.ids as string).split(",").map(id => Number(id));
+  const id = req.params.userID as UUID;
+  const operationIds = (req.query.ids as string).split(",").map(id => Number(id));
 
-  const operation = await handleError(deleteUserOperations(userId, ids));
+  const operation = await handleError(deleteUserOperations(id, operationIds));
 
   if (operation instanceof PromiseError) {
     res.status(404);

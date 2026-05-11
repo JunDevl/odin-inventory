@@ -27,14 +27,14 @@ export const getEntity: RequestHandler = async (req, res) => {
 
 export const createEntity: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const newEntity = req.body; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const entity = await handleError(insertUserEntityFranchise(params));
+  const entity = await handleError(insertUserEntityFranchise(id, newEntity));
 
   if (entity instanceof PromiseError) {
     res.status(404);
@@ -46,14 +46,15 @@ export const createEntity: RequestHandler = async (req, res) => {
 
 export const updateEntity: RequestHandler = async (req, res) => {
   const id = req.params.userID as UUID;
-  const params = req.body; // Implement sanitization...
+  const {name, address} = req.body.old; // Implement sanitization...
+  const newData = req.body.new; // Implement sanitization...
 
   if (!id) {
     res.status(400);
     throw new Error("No user id provided.");
   }
 
-  const entity = await handleError(updateUserEntityFranchise(params));
+  const entity = await handleError(updateUserEntityFranchise(id, {old_entity_name: name, old_address: address}, newData));
 
   if (entity instanceof PromiseError) {
     res.status(404);
