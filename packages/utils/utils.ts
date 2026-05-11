@@ -27,7 +27,7 @@ type ExhaustiveMapping<R extends string, T extends Record<R, unknown>> =
     ? T
     : never;
 
-export type DataRoute = "operations" | "entities" | "avaliable_items" | "item_categories" | "item_units";
+export type DataRoute = "stocks" | "operations" | "entities" | "avaliable_items" | "item_categories" | "item_units";
 
 export type EntityType = "service_provider" | "supplier" | "client";
 
@@ -80,7 +80,13 @@ export namespace TableTypes {
   }
 }
 
+export type Stock = TableTypes.Item & {
+  asset_value_cents: number,
+  stock_quantity: number
+}
+
 export type APICRUDParams = ExhaustiveMapping<DataRoute, {
+  stocks: Stock,
   operations: TableTypes.Operation,
   entities: TableTypes.EntityFranchise,
   avaliable_items: TableTypes.Item,

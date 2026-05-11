@@ -2,24 +2,12 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import "./stocks.css"
 import { queryOptions } from "../../../queries";
 import Table from "../../components/Table/Table";
-import type { APICRUDParams } from "@packages/utils";
 import { useState } from "react";
 
 const Stocks = () => {
-  const { data: operations } = useSuspenseQuery(queryOptions["operations"]);
-  const { data: items } = useSuspenseQuery(queryOptions["avaliable_items"]);
+  const { data } = useSuspenseQuery(queryOptions["stocks"]);
 
-  // const stockData = items.map(item => {
-  //   const itemOperations = operations.filter(operation => operation.item_name === item.name);
-
-  //   const stock_quantity = itemOperations.reduce((acc, cur) => acc + cur.quantity, 0)
-    
-  //   const asset_total_value = itemOperations.reduce((acc, cur) => acc + cur.quantity, 0);
-
-  //   return {...item, stock_quantity, asset_total_value}
-  // });
-
-  const [selectedItemIndexes, setSelectedItemIndexes] = useState(new Int8Array(operations.length).fill(0));
+  const [selectedItemIndexes, setSelectedItemIndexes] = useState(new Int8Array(data.length).fill(0));
   const selectedIndexes = (() => {
     const arr: number[] = [];
 
@@ -28,18 +16,18 @@ const Stocks = () => {
     return arr;
   })();
 
-  const [viewedItem, setViewedItem] = useState(/*stockData[0]*/items[0]);
+  const [viewedItem, setViewedItem] = useState(data[0]);
 
   return (
     <>
       <h1>Stocks Overview</h1>
       <Table 
-        tableRows={/*stockData*/items}
+        tableRows={data}
         columns={{
           name: "Item Name",
           description: "Item Description",
-          // stock_quantity: "Quantity",
-          // asset_total_value: "Asset Value"
+          stock_quantity: "Quantity",
+          asset_value_cents: "Asset Value"
         }}
         setSelectionState={setSelectedItemIndexes}
         setViewState={setViewedItem}
