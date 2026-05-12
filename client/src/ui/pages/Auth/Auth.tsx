@@ -13,7 +13,7 @@ const Auth = (props: AuthProps) => {
   const form = useRef<HTMLFormElement>(null);
   const [currentTab, setCurrentTab] = useState<"login" | "signup">("login");
 
-  const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
+  const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
     const formData = new FormData(form.current!);
@@ -22,21 +22,12 @@ const Auth = (props: AuthProps) => {
     const pass = formData.get("password") as string;
     const init = !!formData.get("init");
 
-    let generatedUUID: Promise<any> | null = null;
+    const generatedUUID: string = form.current?.method === "get" ?
+      await validateUser(email, pass) :
+      await createNewUser(formData.get("username") as string, email, pass, init);
 
-    if (form.current?.method === "get") generatedUUID = validateUser(email, pass);
-
-    if (form.current?.method === "post") {
-      const name = formData.get("username") as string;
-
-      generatedUUID = createNewUser(name, email, pass, init);
-    }
-
-    generatedUUID?.then(res => {
-      localStorage.setItem("userUUID", res);
-      navigate(`/${res}/stocks`);
-    })
-    .catch(e => {throw new Error(e)});
+    localStorage.setItem("userUUID", generatedUUID);
+    //set localstorage user name here...
   }
 
   return (

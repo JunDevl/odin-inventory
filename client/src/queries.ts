@@ -1,5 +1,5 @@
 import type { UseSuspenseQueryOptions } from "@tanstack/react-query";
-import type { APICRUDParams, DataRoute } from "@packages/utils";
+import type { APICRUDParams, DataRoute, Stock } from "@packages/utils";
 import { fetchAll } from "./actions";
 import { queryClient } from "./main";
 
