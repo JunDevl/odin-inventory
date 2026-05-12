@@ -233,7 +233,7 @@ export const deleteUserOperations = async(user_id: UUID, operation_ids: number[]
   return deleted;
 }
 
-export const insertUserOperation = async (user_id: UUID, newOperation: Omit<APICRUDParams["operations"], "operation_id" | "user_id">) => {
+export const insertUserOperation = async (user_id: UUID, newOperation: Omit<APICRUDParams["operations"], "operation_id">) => {
   const {
     addressee_entity_name, addressee_franchise_address, sendee_entity_name, sendee_franchise_address, item_name, quantity, unit_name, price_cents, shipped_at, arrived_at
   } = newOperation;
@@ -244,11 +244,14 @@ export const insertUserOperation = async (user_id: UUID, newOperation: Omit<APIC
       VALUES (${user_id}, ${item_name}, ${user_id}, ${unit_name}, ${price_cents})
       RETURNING history_id;
     ` :
-    sql`SELECT (history_id) FROM (
-      SELECT MAX(priced_at) FROM items_unit_price_history
-      WHERE user_id = ${user_id}
-      AND item_id = ${item_name}
-  )`)
+    sql`
+      SELECT history_id FROM items_unit_price_history
+      WHERE priced_at = (
+        SELECT MAX(priced_at) FROM items_unit_price_history
+        WHERE item_user_id = ${user_id}
+        AND item_name = ${item_name}
+      )
+    `)
 
   if (priceHistory instanceof PromiseError) {
     await sql`ROLLBACK`
@@ -261,7 +264,11 @@ export const insertUserOperation = async (user_id: UUID, newOperation: Omit<APIC
 
   const {history_id} = row;
 
-  newOperation.history_id = history_id;
+  newOperation.user_id = user_id;
+  newOperation.unit_price_id = history_id;
+
+  delete (newOperation as any).unit_name;
+  delete (newOperation as any).price_cents;
 
   const created = await handleError(sql`
     INSERT INTO operations ${sql(newOperation, (Object.keys(newOperation) as (keyof typeof newOperation)[]))}

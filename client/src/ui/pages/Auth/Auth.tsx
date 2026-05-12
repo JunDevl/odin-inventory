@@ -22,12 +22,12 @@ const Auth = (props: AuthProps) => {
     const pass = formData.get("password") as string;
     const init = !!formData.get("init");
 
-    const generatedUUID: string = form.current?.method === "get" ?
+    const {uuid, name} = form.current?.method === "get" ?
       await validateUser(email, pass) :
       await createNewUser(formData.get("username") as string, email, pass, init);
 
-    localStorage.setItem("userUUID", generatedUUID);
-    //set localstorage user name here...
+    localStorage.setItem("userUUID", uuid);
+    localStorage.setItem("userName", name);
   }
 
   return (

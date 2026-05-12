@@ -20,7 +20,7 @@ const Operations = () => {
           listQueryOptions: queryOptions["item_units"],
           relatedColumnKey: "name"
         },
-        price_cents: {type: "number", placeholder: "auto"},
+        price_cents: {type: "number", placeholder: "auto", notMandatory: true},
         quantity: {type: "number", placeholder: "blank"},
         addressee_entity_name: {
           type: ["string", "list"], 

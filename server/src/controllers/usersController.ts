@@ -23,7 +23,7 @@ export const createUser: RequestHandler = async (req, res) => {
   const [row] = createdUser;
   const {user} = row!;
 
-  res.send(user); 
+  res.json(user); 
 }
 
 export const authenticateUser: RequestHandler = async (req, res) => {
@@ -47,9 +47,9 @@ export const authenticateUser: RequestHandler = async (req, res) => {
   }
 
   const [row] = dbRecord;
-  const {id: uuid, password_hash: hash} = row as {id: string, password_hash: string};
+  const {id: uuid, password_hash: hash, name} = row as Record<string, any>;
 
-  const validated = await argon2.verify((hash as unknown) as string, pass);
+  const validated = await argon2.verify(hash, pass);
 
   if (!validated) {
     res.statusCode = 401;
@@ -57,7 +57,7 @@ export const authenticateUser: RequestHandler = async (req, res) => {
     return;
   }
 
-  res.send(uuid);
+  res.json({uuid, name});
 }
 
 export const deleteUserController: RequestHandler = async (req, res) => {

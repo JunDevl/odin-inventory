@@ -21,11 +21,11 @@ const postHeaders: HeadersInit = {
 export const validateUser = async (email: string, password: string) => {
   const data = await fetch(`${import.meta.env["VITE_API_URI"]!}/users/auth?email=${email}&pass=${password}`);
 
-  const userUUID = await data.text();
+  if (!data.ok) throw new Error(await data.text());
+
+  const {id: uuid, name} = await data.json();
   
-  if (!data.ok) throw new Error(userUUID);
-  
-  return userUUID;
+  return {uuid, name};
 }
 
 export const createNewUser = async (username: string, email: string, password: string, initData?: boolean) => {
@@ -42,9 +42,9 @@ export const createNewUser = async (username: string, email: string, password: s
 
   if (!postUser.ok) throw new Error(await postUser.text());
 
-  const createdUserUUID = await postUser.text();
+  const {id: uuid, name} = await postUser.json();
 
-  return createdUserUUID;
+  return {uuid, name};
 }
 
 export const fetchAll = async <T extends DataRoute>(route: T) => {
