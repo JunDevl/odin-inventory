@@ -15,7 +15,7 @@ type DataPageProps<T extends DataRoute> = {
   dataRoute: T,
   identifier: {keys: Array<keyof APICRUDParams[T]>, type: "number" | "name"};
   requiredInputColumnTypes: {
-    [TableColumn in keyof APICRUDParams[T]]?: InputDetail
+    [TableColumn in keyof Partial<APICRUDParams[T]>]: InputDetail
   },
   renamedColumns: {
     [RequiredColumn in keyof DataPageProps<T>["requiredInputColumnTypes"]]: string
@@ -100,7 +100,6 @@ const DataPage = <T extends DataRoute>({
       <Modal
         id="view"
         ref={viewModal}
-        details={requiredInputColumnTypes} 
         columns={renamedColumns} 
         route={dataRoute}
         operation="view"
@@ -146,8 +145,8 @@ const DataPage = <T extends DataRoute>({
         <Table 
           tableRows={data}
           columns={renamedColumns}
-          setViewState={setViewedItem}
-          setSelectionState={setSelectedItemIndexes}
+          viewStateSetter={setViewedItem}
+          selectionStateSetter={setSelectedItemIndexes}
           onCellClick={() => setModal("view")}
         />
       </div>

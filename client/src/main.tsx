@@ -9,7 +9,7 @@ import routes from "./routes.tsx";
 import './index.css'
 
 const router = createBrowserRouter(routes);
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

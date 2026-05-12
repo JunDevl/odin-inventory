@@ -1,4 +1,4 @@
-import type { InputDetail, TableData } from "../DataPage/types";
+import type { InputDetail } from "../DataPage/types";
 import type { APICRUDParams, DataRoute } from "@packages/utils";
 import type { DialogHTMLAttributes, RefObject, SubmitEvent } from "react";
 import { handleError, PromiseError } from "@packages/utils";
@@ -10,34 +10,40 @@ import Checkbox from "../Checkbox/Checkbox";
 import { createData, updateData } from "../../../actions";
 import { useQueryClient } from "@tanstack/react-query";
 
-type ModalProps<T extends DataRoute> = DialogHTMLAttributes<HTMLDialogElement> & {
-  details: {
-    [TableColumn in keyof TableData | (string & {})]?: InputDetail
-  },
-  columns: {
-    [RequiredColumn in keyof ModalProps<T>["details"]]: string
-  },
-  route: T
-  ref?: RefObject<HTMLDialogElement | null>
-} & ({
-  operation: "insert",
-  selectedItem?: null
-} | {
-  operation: "update" | "view",
-  selectedItem: APICRUDParams[T]
-})
+type ModalProps<T extends DataRoute> = 
+DialogHTMLAttributes<HTMLDialogElement> & {
+    route: T,
+    ref?: RefObject<HTMLDialogElement | null>
+  } & ({
+    details: {[TableColumn in keyof Partial<APICRUDParams[T]>]: InputDetail},
+    columns: {[RequiredColumn in keyof ModalProps<T>["details"]]: string},
+    operation: "insert",
+    selectedItem?: null
+  } | {
+    details: {[TableColumn in keyof Partial<APICRUDParams[T]>]: InputDetail},
+    columns: {[RequiredColumn in keyof ModalProps<T>["details"]]: string},
+    operation: "update",
+    selectedItem: APICRUDParams[T]
+  } | {
+    details?: null,
+    columns: {[RequiredColumn in keyof Partial<APICRUDParams[T]>]: string},
+    operation: "view",
+    selectedItem: APICRUDParams[T]
+  });
 
-const Modal = <T extends DataRoute ,>({details, columns, route, ref, operation, selectedItem, ...props}: ModalProps<T>) => {
+const Modal = <T extends DataRoute,>({details, columns, route, ref, operation, selectedItem, ...props}: ModalProps<T>) => {
   const queryClient = useQueryClient();
   
   const modal = ref ?? useRef<HTMLDialogElement>(null);
   const form = useRef<HTMLFormElement>(null);
-  const formInputs = useRef<Map<keyof typeof columns, (HTMLInputElement | HTMLSelectElement)>>(new Map());
+  const formInputs = useRef<Map<string, (HTMLInputElement | HTMLSelectElement)>>(new Map());
 
-  const modalInput = (key: keyof typeof details, detail: InputDetail, index: number) => {
+  const modalInput = (key: string, detail: InputDetail, index: number) => {
+    if (operation === "view") throw new Error("Can't call this function in view mode.");
+
     const dataType = detail.type instanceof Array ? detail.type[0] : detail.type;
     const required = !detail.notMandatory;
-    const initialValue: any = selectedItem ? selectedItem[key as keyof APICRUDParams[T]] : "";
+    const initialValue: any = selectedItem ? selectedItem[key as keyof typeof selectedItem] : "";
 
     switch (dataType) {
       case "boolean": 
@@ -119,6 +125,8 @@ const Modal = <T extends DataRoute ,>({details, columns, route, ref, operation, 
   }
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
+    if (operation === "view") throw new Error("Can't call this function in view mode.");
+
     e.preventDefault();
 
     const formData = new FormData(form.current!);
@@ -155,49 +163,39 @@ const Modal = <T extends DataRoute ,>({details, columns, route, ref, operation, 
     );
   }
 
-  const inputJsxList = 
-    <ul>
-      {
-        Object.entries(details).map(([key, value], index) => 
-          <li key={key}>
-            {
-              operation !== "view" ?
-                <>
-                  <label className="column_name" htmlFor={key}>{columns[key]}</label>
-                  {modalInput(key, value!, index)} 
-                </> :
-                <>
-                  <h4 className="column_name">{columns[key]}</h4>
-                  {selectedItem && 
-                    <p>
-                      {selectedItem[key as keyof APICRUDParams[T]] instanceof Date ? 
-                        (selectedItem[key as keyof APICRUDParams[T]] as any).toDateString() : 
-                        selectedItem[key as keyof APICRUDParams[T]]}
-                      </p>
-                  }
-                </>
-            }
-          </li>
-        ) 
-      }
-    </ul>
-
   return (
     <dialog id="insert" ref={modal} {...props}>
-      <h2>
-        {
-          operation === "insert" ? "Insert new item to collection" : 
-          operation === "update" ? "Update item" : "View item"
-        }
-      </h2>
-      {
-        operation !== "view" ?
+      <h2>{
+        operation === "insert" ? "Insert new item to collection" : 
+        operation === "update" ? "Update item" : "View item"
+      }</h2>
+      {operation !== "view" ?
         <form action="POST" onSubmit={e => handleSubmit(e)} ref={form}>
-          <ul>{inputJsxList}</ul>
+          <ul>{
+            Object.entries(details).map(([key, value], index) => 
+              <li key={key}>
+                <label className="column_name" htmlFor={key}>{columns[key as keyof typeof columns]}</label>
+                {modalInput(key, value as any, index)} 
+              </li>
+            ) 
+          }</ul>
           <button type="submit">Submit</button>
         </form> :
         <div>
-          <ul>{inputJsxList}</ul>
+          <ul>{
+            Object.entries(columns).map(([key, value], index) => 
+              <li key={key}>
+                <h4 className="column_name">{columns[key as keyof APICRUDParams[T]]}</h4>
+                {selectedItem && 
+                  <p>
+                    {selectedItem[key as keyof APICRUDParams[T]] instanceof Date ? 
+                      (selectedItem[key as keyof APICRUDParams[T]] as any).toDateString() : 
+                      selectedItem[key as keyof APICRUDParams[T]]}
+                    </p>
+                }
+              </li>
+            ) 
+          }</ul>
         </div>
       }
       <button className="close" onClick={() => modal.current!.close()}>Close</button>

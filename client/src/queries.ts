@@ -1,29 +1,31 @@
 import type { UseSuspenseQueryOptions } from "@tanstack/react-query";
-import type { APICRUDParams, DataRoute, Stock } from "@packages/utils";
+import type { APICRUDParams, DataRoute } from "@packages/utils";
 import { fetchAll } from "./actions";
+import { queryClient } from "./main";
 
 export const queryOptions: { [K in DataRoute]: UseSuspenseQueryOptions<APICRUDParams[K][]> } = {
   stocks: {
-    queryKey: ["operations", "items"],
+    queryKey: ["stocks"],
     queryFn: async () => {
-      const items = await fetchAll("avaliable_items");
-      const operations = await fetchAll("operations");
+      const [items, operations] = await Promise.all([
+        queryClient.fetchQuery(queryOptions["avaliable_items"]),
+        queryClient.fetchQuery(queryOptions["operations"])
+      ]);
 
       const stockData: Stock[] = items
         .map(item => {
           const itemOperations = operations.filter(operation => operation.item_name === item.name);
 
-          const stock_quantity = itemOperations.reduce((acc, cur) => acc + Number(cur.quantity), 0)
+          const stock_quantity = itemOperations.reduce((acc, cur) => acc + Number(cur.quantity), 0);
           
           const asset_value_cents = itemOperations.reduce((acc, cur) => acc + cur.price_cents, 0);
 
-          return {...item, stock_quantity, asset_value_cents}
+          return {...item, stock_quantity, asset_value_cents};
         })
         .filter(stock => stock.stock_quantity !== 0 || stock.asset_value_cents !== 0);
 
       return stockData;
     },
-    staleTime: Infinity
   },
   operations: {
     queryKey: ["operations"],

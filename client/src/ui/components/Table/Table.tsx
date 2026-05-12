@@ -15,14 +15,14 @@ type TableProps<T extends Record<string, any>> = {
   columns: {
     [RequiredColumn in keyof T]?: string
   },
-  setViewState: React.Dispatch<React.SetStateAction<T>>,
-  setSelectionState: React.Dispatch<React.SetStateAction<Int8Array<ArrayBuffer>>>,
+  viewStateSetter: React.Dispatch<React.SetStateAction<T>>,
+  selectionStateSetter: React.Dispatch<React.SetStateAction<Int8Array<ArrayBuffer>>>,
   onRowHover?: React.MouseEventHandler<HTMLTableRowElement>,
   onCellClick?: React.MouseEventHandler<HTMLTableDataCellElement>
 } & HTMLProps<HTMLTableElement>
 
 const Table = <T extends Record<string, any>>({
-  tableRows, columns, setViewState, setSelectionState, onRowHover, onCellClick, ...props
+  tableRows, columns, viewStateSetter, selectionStateSetter, onRowHover, onCellClick, ...props
 }: TableProps<T>) => {
   const selectAll = useRef<HTMLInputElement>(null);
   const rowSelectors = useRef<HTMLInputElement[]>([]);
@@ -52,7 +52,7 @@ const Table = <T extends Record<string, any>>({
 
       const i = Number(row?.dataset.index);
 
-      setSelectionState(previousSelected => {
+      selectionStateSetter(previousSelected => {
         const newSelected = new Int8Array(previousSelected);
 
         newSelected[i] = selector.checked ? 1 : 0;
@@ -83,7 +83,7 @@ const Table = <T extends Record<string, any>>({
 
     const i = Number(row?.dataset.index);
     
-    setSelectionState(previousSelected => {
+    selectionStateSetter(previousSelected => {
       const newSelected = new Int8Array(previousSelected);
 
       newSelected[i] = checkbox!.checked ? 1 : 0;
@@ -119,7 +119,7 @@ const Table = <T extends Record<string, any>>({
     return currentCellValue as any; 
   }
 
-  useEffect(() => setSelectionState(new Int8Array(tableRows.length).fill(0)), [tableRows])
+  useEffect(() => selectionStateSetter(new Int8Array(tableRows.length).fill(0)), [tableRows])
 
   return (
     <table {...props} id="data-table">
@@ -148,7 +148,7 @@ const Table = <T extends Record<string, any>>({
               key={`row${index+1}`} 
               data-index={index} 
               onMouseEnter={(e) => {
-                setViewState(tableRows[index]);
+                viewStateSetter(tableRows[index]);
                 if (onRowHover) onRowHover(e);
               }}
             >
