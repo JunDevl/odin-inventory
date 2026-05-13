@@ -21,7 +21,7 @@ const app = express();
 const PORT = 3000;
 
 app.use(cors({
-  origin: "http://localhost:5173"
+  origin: /^https:\/\/odin-inventory-client$/
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
