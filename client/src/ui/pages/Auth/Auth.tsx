@@ -28,6 +28,7 @@ const Auth = (props: AuthProps) => {
 
     localStorage.setItem("userUUID", uuid);
     localStorage.setItem("userName", name);
+    navigate(`/${uuid}/stocks`);
   }
 
   return (

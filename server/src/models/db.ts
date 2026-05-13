@@ -37,14 +37,14 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
   const created = await handleError(sql`
     INSERT INTO users (name, email, password_hash)
     VALUES (${username}, ${email}, ${hashedPassword})
-    RETURNING users.id
+    RETURNING row_to_json(users.*)
   `)
 
   if (created instanceof PromiseError) throw new Error(created.error);
 
   if (initUserData) {
-    const [row] = created;
-    const {id} = row!;
+    const {row_to_json} = created[0]!;
+    const {id} = row_to_json!;
 
     const uniqueEntities = 
       Array.from(
@@ -192,7 +192,9 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
     await sql`INSERT INTO operations ${sql(operationsWithUnitPricesID)}`;
   }
 
-  return created;
+  const {row_to_json} = created[0]!;
+
+  return row_to_json;
 }
 
 export const retrieveUser = async (userIdentifier: {email: string} | {user_id: UUID}) => {

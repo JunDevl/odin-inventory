@@ -20,10 +20,7 @@ export const createUser: RequestHandler = async (req, res) => {
     throw new Error(createdUser.error);
   }
 
-  const [row] = createdUser;
-  const {user} = row!;
-
-  res.json(user); 
+  res.json(createdUser);
 }
 
 export const authenticateUser: RequestHandler = async (req, res) => {
