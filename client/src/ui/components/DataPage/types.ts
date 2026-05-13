@@ -3,8 +3,6 @@ import { queryOptions } from "../../../queries";
 
 export type TableData = APICRUDParams[keyof APICRUDParams];
 
-type aoba = APICRUDParams["operations"]["user_id"];
-
 type Primitive = "string" | "number" | "boolean" | DateConstructor;
 type InputTypeAttribute = Primitive | [Primitive, "list"];
 type PlaceholderBehavior = "blank" | "auto";

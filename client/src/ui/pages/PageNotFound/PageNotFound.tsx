@@ -1,6 +1,4 @@
-type Props = {}
-
-const PageNotFound = (props: Props) => {
+const PageNotFound = () => {
   return (
     <div>PageNotFound</div>
   )

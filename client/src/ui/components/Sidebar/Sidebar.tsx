@@ -1,10 +1,8 @@
-import { useRef, useState, type HTMLProps, type MouseEventHandler, type ReactNode } from "react";
+import { useRef } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import "./sidebar.css";
 
-type SidebarProps = {}
-
-const Sidebar = (props: SidebarProps) => {
+const Sidebar = () => {
   const { userUUID } = useParams();
   const location = useLocation();
 

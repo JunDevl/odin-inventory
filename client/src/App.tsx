@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import Sidebar from './ui/components/Sidebar/Sidebar';
-import { Outlet, useNavigate, useParams } from 'react-router';
+import { Outlet, useParams } from 'react-router';
 import PageNotFound from './ui/pages/PageNotFound/PageNotFound';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function App() {
-  const navigate = useNavigate();
   const [error, setError] = useState(false);
 
   const { userUUID } = useParams();

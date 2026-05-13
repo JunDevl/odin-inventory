@@ -5,9 +5,7 @@ import { useNavigate } from "react-router";
 
 import "./auth.css";
 
-type AuthProps = {}
-
-const Auth = (props: AuthProps) => {
+const Auth = () => {
   const navigate = useNavigate();
 
   const form = useRef<HTMLFormElement>(null);

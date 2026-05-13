@@ -1,6 +1,4 @@
-type AccountProps = {}
-
-const Account = (props: AccountProps) => {
+const Account = () => {
   return (
     <div>Account</div>
   )

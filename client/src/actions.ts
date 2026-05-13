@@ -1,5 +1,5 @@
 import type { UUID } from "node:crypto";
-import type { DataRoute, APICRUDParams, Prettify } from "@packages/utils";
+import type { DataRoute, APICRUDParams } from "@packages/utils";
 
 const dataRouteURI = (route: DataRoute, userID: UUID) => {
   let uri;

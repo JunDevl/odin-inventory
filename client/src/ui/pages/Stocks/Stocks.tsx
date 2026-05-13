@@ -1,28 +1,25 @@
 import "./stocks.css"
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { queryOptions } from "../../../queries";
 import Table from "../../components/Table/Table";
-import type { Stock } from "@packages/utils";
 import Modal from "../../components/Modal/Modal";
 
 const Stocks = () => {
-  const queryClient = useQueryClient();
-
   const { data } = useSuspenseQuery(queryOptions["stocks"]);
 
   const [modalActive, setModalActive] = useState(false);
 
   const modal = useRef<HTMLDialogElement>(null);
 
-  const [selectedItemIndexes, setSelectedItemIndexes] = useState(new Int8Array(data.length).fill(0));
-  const selectedIndexes = (() => {
-    const arr: number[] = [];
+  const [/*selectedItemIndexes*/_,setSelectedItemIndexes] = useState(new Int8Array(data.length).fill(0));
+  // const selectedIndexes = (() => {
+  //   const arr: number[] = [];
 
-    selectedItemIndexes.forEach((value, index) => {if (value === 1) arr.push(index)});
+  //   selectedItemIndexes.forEach((value, index) => {if (value === 1) arr.push(index)});
 
-    return arr;
-  })();
+  //   return arr;
+  // })();
 
   const [viewedItem, setViewedItem] = useState(data[0]);
 

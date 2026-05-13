@@ -38,7 +38,7 @@ const Modal = <T extends DataRoute,>({details, columns, route, ref, operation, s
   const form = useRef<HTMLFormElement>(null);
   const formInputs = useRef<Map<string, (HTMLInputElement | HTMLSelectElement)>>(new Map());
 
-  const modalInput = (key: string, detail: InputDetail, index: number) => {
+  const modalInput = (key: string, detail: InputDetail) => {
     if (operation === "view") throw new Error("Can't call this function in view mode.");
 
     const dataType = detail.type instanceof Array ? detail.type[0] : detail.type;
@@ -172,10 +172,10 @@ const Modal = <T extends DataRoute,>({details, columns, route, ref, operation, s
       {operation !== "view" ?
         <form action="POST" onSubmit={e => handleSubmit(e)} ref={form}>
           <ul>{
-            Object.entries(details).map(([key, value], index) => 
+            Object.entries(details).map(([key, value]) => 
               <li key={key}>
                 <label className="column_name" htmlFor={key}>{columns[key as keyof typeof columns]}</label>
-                {modalInput(key, value as any, index)} 
+                {modalInput(key, value as any)} 
               </li>
             ) 
           }</ul>
@@ -183,7 +183,7 @@ const Modal = <T extends DataRoute,>({details, columns, route, ref, operation, s
         </form> :
         <div>
           <ul>{
-            Object.entries(columns).map(([key, value], index) => 
+            Object.entries(columns).map(([key]) => 
               <li key={key}>
                 <h4 className="column_name">{columns[key as keyof APICRUDParams[T]]}</h4>
                 {selectedItem && 

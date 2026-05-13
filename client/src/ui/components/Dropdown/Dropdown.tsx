@@ -1,6 +1,6 @@
 import type { HTMLProps, JSX } from "react";
 import type { APICRUDParams, DataRoute } from "@packages/utils";
-import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { queryOptions } from "../../../queries";
 
 type DropdownProps<T extends DataRoute> = 
