@@ -234,8 +234,8 @@ export const operations = [
     quantity: 4,
     addressee_entity_name: null,
     addressee_franchise_address: null,
-    sendee_entity_name: null,
-    sendee_franchise_address: null,
+    sendee_entity_name: "Taurus Holdings, Inc.",
+    sendee_franchise_address: "16175 Northwest 49 Avenue Miami Lakes, FL 33014, United States",
     shipped_at: null,
     arrived_at: "2026-02-05"
   },

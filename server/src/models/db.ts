@@ -37,7 +37,7 @@ export const insertNewUser = async (username: string, email: string, hashedPassw
   const created = await handleError(sql`
     INSERT INTO users (name, email, password_hash)
     VALUES (${username}, ${email}, ${hashedPassword})
-    RETURNING (users.id, users.name)
+    RETURNING users.id
   `)
 
   if (created instanceof PromiseError) throw new Error(created.error);
@@ -234,9 +234,7 @@ export const deleteUserOperations = async(user_id: UUID, operation_ids: number[]
 }
 
 export const insertUserOperation = async (user_id: UUID, newOperation: Omit<APICRUDParams["operations"], "operation_id">) => {
-  const {
-    addressee_entity_name, addressee_franchise_address, sendee_entity_name, sendee_franchise_address, item_name, quantity, unit_name, price_cents, shipped_at, arrived_at
-  } = newOperation;
+  const { item_name, unit_name, price_cents } = newOperation;
 
   const priceHistory = await handleError(price_cents ? sql`
       INSERT INTO 
@@ -265,6 +263,11 @@ export const insertUserOperation = async (user_id: UUID, newOperation: Omit<APIC
   const {history_id} = row;
 
   newOperation.user_id = user_id;
+  newOperation.unit_price_item_name = item_name;
+  newOperation.item_user_id = user_id;
+  newOperation.unit_price_user_id = user_id;
+  newOperation.addressee_user_id = user_id;
+  newOperation.sendee_user_id = user_id;
   newOperation.unit_price_id = history_id;
 
   delete (newOperation as any).unit_name;

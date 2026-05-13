@@ -18,21 +18,21 @@ export const queryOptions: { [K in DataRoute]: UseSuspenseQueryOptions<APICRUDPa
 
           const userEntityName = localStorage.getItem("userName");
           const stock_quantity = itemOperations.reduce((acc, cur) => {
+            if (cur.sendee_entity_name === userEntityName)
+              return acc - Number(cur.quantity);
+            
             if (cur.addressee_entity_name === userEntityName) 
               return acc + Number(cur.quantity);
             
-            if (cur.sendee_entity_name === userEntityName)
-              return acc - Number(cur.quantity);
-
             return 0;
           }, 0);
           
           const asset_value_cents = itemOperations.reduce((acc, cur) => {
-            if (cur.addressee_entity_name === userEntityName) 
-              return acc + Number(cur.price_cents);
-            
             if (cur.sendee_entity_name === userEntityName)
-              return acc - Number(cur.price_cents);
+              return acc - Number(cur.total_price_cents);
+            
+            if (cur.addressee_entity_name === userEntityName) 
+              return acc + Number(cur.total_price_cents);
 
             return 0;
           }, 0);

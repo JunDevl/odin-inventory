@@ -9,29 +9,7 @@ import Modal from "../../components/Modal/Modal";
 const Stocks = () => {
   const queryClient = useQueryClient();
 
-  const { data } = useSuspenseQuery({
-    queryKey: ["stocks"],
-    queryFn: async () => {
-      const [items, operations] = await Promise.all([
-        queryClient.fetchQuery(queryOptions["avaliable_items"]),
-        queryClient.fetchQuery(queryOptions["operations"])
-      ]);
-
-      const stockData: Stock[] = items
-        .map(item => {
-          const itemOperations = operations.filter(operation => operation.item_name === item.name);
-
-          const stock_quantity = itemOperations.reduce((acc, cur) => acc + Number(cur.quantity), 0);
-          
-          const asset_value_cents = itemOperations.reduce((acc, cur) => acc + cur.price_cents, 0);
-
-          return {...item, stock_quantity, asset_value_cents};
-        })
-        .filter(stock => stock.stock_quantity !== 0 || stock.asset_value_cents !== 0);
-
-      return stockData;
-    },
-  })
+  const { data } = useSuspenseQuery(queryOptions["stocks"]);
 
   const [modalActive, setModalActive] = useState(false);
 
